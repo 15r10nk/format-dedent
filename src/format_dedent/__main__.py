@@ -84,13 +84,59 @@ def format_string_content(content: str, indent_level: int = 0) -> str:
             # Keep empty lines at start/end empty
             result_lines.append('')
         elif line.strip():
-            # Non-empty line: add indentation and remove trailing whitespace
-            result_lines.append(indent_str + line.rstrip())
+            # Non-empty line: add indentation (preserve trailing whitespace)
+            result_lines.append(indent_str + line)
         else:
             # Empty line in the middle: keep it empty
             result_lines.append('')
 
     return '\n'.join(result_lines)
+
+
+def check_format(original_code: str, formatted_code: str) -> bool:
+    """
+    Check that formatting doesn't change the semantics of dedent strings.
+    
+    Verifies that dedent(original_string) == dedent(formatted_string) for all
+    dedent() calls in the code.
+    
+    Args:
+        original_code: The original source code
+        formatted_code: The formatted source code
+        
+    Returns:
+        True if the formatting is semantically equivalent, False otherwise
+    """
+    import textwrap
+    
+    # Parse both versions
+    try:
+        original_tree = ast.parse(original_code)
+        formatted_tree = ast.parse(formatted_code)
+    except SyntaxError:
+        # If either fails to parse, we can't verify
+        return False
+    
+    # Find dedent strings in both
+    original_finder = DedentStringFinder(original_code.splitlines(keepends=True))
+    formatted_finder = DedentStringFinder(formatted_code.splitlines(keepends=True))
+    
+    original_finder.visit(original_tree)
+    formatted_finder.visit(formatted_tree)
+    
+    # Should have the same number of dedent calls
+    if len(original_finder.dedent_strings) != len(formatted_finder.dedent_strings):
+        return False
+    
+    # Compare each pair of dedent strings
+    for orig_node, fmt_node in zip(original_finder.dedent_strings, formatted_finder.dedent_strings):
+        orig_dedented = textwrap.dedent(orig_node.value)
+        fmt_dedented = textwrap.dedent(fmt_node.value)
+        
+        if orig_dedented != fmt_dedented:
+            return False
+    
+    return True
 
 
 def format_dedent_strings(source: str, filename: str = "<string>") -> str:
@@ -193,6 +239,10 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
 
     # Convert back to string
     formatted_source = ''.join(source_chars)
+    
+    # Verify that formatting preserves semantics
+    if not check_format(source, formatted_source):
+        raise RuntimeError(f"Formatting validation failed for {filename}: dedented strings don't match")
 
     return formatted_source
 

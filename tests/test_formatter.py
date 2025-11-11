@@ -342,11 +342,11 @@ unformatted = """
 ''')
 
 
-class TestTrailingWhitespaceRemoval:
-    """Test that trailing whitespace is removed from dedent strings."""
+class TestTrailingWhitespacePreserved:
+    """Test that trailing whitespace is preserved in dedent strings."""
 
-    def test_removes_trailing_spaces(self):
-        """Trailing spaces should be removed."""
+    def test_preserves_trailing_spaces(self):
+        """Trailing spaces and tabs should be preserved."""
         source = '''\
 from textwrap import dedent
 
@@ -360,7 +360,7 @@ from textwrap import dedent
 
 text = dedent("""
     Line with spaces
-    Another line with tabs
+    Another line with tabs\t\t
 """)
 ''')
 
@@ -541,7 +541,7 @@ l = [
         """
         SELECT *
 
-        FROM users
+        FROM users    \n\
         WHERE active = true
             AND age > 18
         """
