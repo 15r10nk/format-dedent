@@ -774,6 +774,25 @@ multiline
 '''
         )
 
+    def test_skips_strings_containing_newline_chars(self):
+        """Strings containing \\n but on single line should not be wrapped."""
+        source = '''\
+x = "\\n"
+y = '\\n'
+z = "hello\\nworld"
+func("\\n")
+'''
+        result = add_dedent(source)
+        # None of these should be wrapped since they're single-line literals
+        assert result == snapshot(
+            '''\
+x = "\\n"
+y = '\\n'
+z = "hello\\nworld"
+func("\\n")
+'''
+        )
+
     def test_multiple_strings_in_function(self):
         """Multiple multiline strings in a function."""
         source = '''\

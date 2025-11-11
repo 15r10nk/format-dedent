@@ -175,7 +175,9 @@ class MultilineStringFinder(ast.NodeVisitor):
 
     def visit_Constant(self, node: ast.Constant) -> None:
         """Visit string constants to find multiline strings not in dedent()."""
-        if isinstance(node.value, str) and "\n" in node.value:
+        # Check if the string literal spans multiple lines in the source code
+        # (not just if the string value contains newlines)
+        if isinstance(node.value, str) and node.lineno != node.end_lineno:
             # Only add if not already tracked as being in a dedent() call
             if id(node) not in self.dedent_string_ids:
                 self.multiline_strings.append(node)
