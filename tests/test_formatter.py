@@ -674,15 +674,27 @@ x = """
 hello
 world
 """
+
+x = f("""
+hello
+world
+""")
+
 '''
         result = add_dedent(source)
         assert result == snapshot(
             '''\
 from textwrap import dedent
-x = dedent("""
+x = """
 hello
 world
-""")
+"""
+
+x = f(dedent("""
+hello
+world
+"""))
+
 '''
         )
 
@@ -726,9 +738,9 @@ x = dedent("""
 already wrapped
 """)
 
-y = dedent("""
+y = """
 not wrapped
-""")
+"""
 '''
         )
 
@@ -745,11 +757,10 @@ content
         assert result == snapshot(
             '''\
 """Module docstring."""
-from textwrap import dedent
 
-x = dedent("""
+x = """
 content
-""")
+"""
 '''
         )
 
@@ -765,32 +776,31 @@ multiline
         result = add_dedent(source)
         assert result == snapshot(
             '''\
-from textwrap import dedent
 x = "single line"
 y = """single line"""
-z = dedent("""
+z = """
 multiline
-""")
+"""
 '''
         )
 
     def test_skips_strings_containing_newline_chars(self):
         """Strings containing \\n but on single line should not be wrapped."""
-        source = '''\
+        source = """\
 x = "\\n"
 y = '\\n'
 z = "hello\\nworld"
 func("\\n")
-'''
+"""
         result = add_dedent(source)
         # None of these should be wrapped since they're single-line literals
         assert result == snapshot(
-            '''\
+            """\
 x = "\\n"
 y = '\\n'
 z = "hello\\nworld"
 func("\\n")
-'''
+"""
         )
 
     def test_preserves_escape_sequences_in_content(self):
@@ -879,9 +889,9 @@ content
             '''\
 import textwrap
 
-x = dedent("""
+x = """
 content
-""")
+"""
 '''
         )
 
@@ -899,9 +909,9 @@ content
             '''\
 from textwrap import dedent
 
-x = dedent("""
+x = """
 content
-""")
+"""
 '''
         )
 
@@ -944,9 +954,9 @@ TEMPLATE = """
     Keep as is
 """
 
-SIMPLE = dedent("""
+SIMPLE = """
 no indent
-""")
+"""
 '''
         )
 

@@ -149,7 +149,51 @@ class MultilineStringFinder(ast.NodeVisitor):
     def __init__(self):
         self.multiline_strings: List[ast.Constant] = []
         self.dedent_string_ids: set = set()
+        self.module_level_assign_ids: set = set()
         self.in_fstring = False
+        self.scope_depth = (
+            0  # Track if we're at module level (0) or inside function/class
+        )
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Track entering function scope."""
+        self.scope_depth += 1
+        self.generic_visit(node)
+        self.scope_depth -= 1
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Track entering async function scope."""
+        self.scope_depth += 1
+        self.generic_visit(node)
+        self.scope_depth -= 1
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Track entering class scope."""
+        self.scope_depth += 1
+        self.generic_visit(node)
+        self.scope_depth -= 1
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        """Track module-level assignments to skip their string values."""
+        if self.scope_depth == 0:
+            # This is a module-level assignment
+            # Only mark string constants that are DIRECTLY the value, not nested in calls
+            if isinstance(node.value, ast.Constant) and isinstance(
+                node.value.value, str
+            ):
+                self.module_level_assign_ids.add(id(node.value))
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        """Track module-level annotated assignments to skip their string values."""
+        if self.scope_depth == 0 and node.value:
+            # This is a module-level annotated assignment with a value
+            # Only mark string constants that are DIRECTLY the value, not nested in calls
+            if isinstance(node.value, ast.Constant) and isinstance(
+                node.value.value, str
+            ):
+                self.module_level_assign_ids.add(id(node.value))
+        self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
         """Track strings inside dedent() calls to skip them."""
@@ -192,8 +236,13 @@ class MultilineStringFinder(ast.NodeVisitor):
         # Check if the string literal spans multiple lines in the source code
         # (not just if the string value contains newlines)
         if isinstance(node.value, str) and node.lineno != node.end_lineno:
-            # Only add if not already tracked as being in a dedent() call
-            if id(node) not in self.dedent_string_ids:
+            # Only add if:
+            # 1. Not already tracked as being in a dedent() call
+            # 2. Not a module-level variable assignment
+            if (
+                id(node) not in self.dedent_string_ids
+                and id(node) not in self.module_level_assign_ids
+            ):
                 self.multiline_strings.append(node)
 
         self.generic_visit(node)
@@ -424,12 +473,14 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
 
         # Escape the formatted content for the target quote style
         # We need to escape backslashes and the quote character being used
-        escaped_content = formatted_content.replace("\\", "\\\\")  # Escape backslashes first
+        escaped_content = formatted_content.replace(
+            "\\", "\\\\"
+        )  # Escape backslashes first
         if quote == '"""':
             # In triple double quotes, escape any """ sequences
-            escaped_content = escaped_content.replace('"""', r'\"\"\"')
+            escaped_content = escaped_content.replace('"""', r"\"\"\"")
         elif quote == "'''":
-            # In triple single quotes, escape any ''' sequences  
+            # In triple single quotes, escape any ''' sequences
             escaped_content = escaped_content.replace("'''", r"\'\'\'")
         elif quote == '"':
             escaped_content = escaped_content.replace('"', '\\"')

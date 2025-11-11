@@ -17,7 +17,7 @@ SOURCE = dedent(
     line1
     line2
     """)
-'''
+    '''
 )
 
 EXPECTED = snapshot(
@@ -28,7 +28,7 @@ EXPECTED = snapshot(
             line1
             line2
         """)
-    '''
+        '''
     )
 )
 
@@ -38,7 +38,7 @@ SYNTAX_ERROR_SOURCE = dedent(
     # This has a syntax error
     def broken(:
         pass
-"""
+    """
 )
 
 
@@ -173,7 +173,7 @@ class TestCLIBasics:
                         line2
                     """)
 
-                '''
+                    '''
                 )
             ),
         )
@@ -276,21 +276,18 @@ class TestAddDedentCLI:
             hello
             world
             """
-        '''
+            '''
         )
         run_cli(
             args_list=["--add-dedent"],
             stdin_input=input_source,
             expected_stdout=snapshot(
-                dedent(
-                    '''\
-                    from textwrap import dedent
-                    x = dedent("""
-                        hello
-                        world
-                    """)
-                '''
-                )
+                '''\
+x = """
+hello
+world
+"""
+'''
             ),
         )
 
@@ -306,23 +303,20 @@ class TestAddDedentCLI:
                 indented
                 content
             """
-        '''
+            '''
         )
         expected_output = snapshot(
-            dedent(
-                '''\
-                from textwrap import dedent
-                x = dedent("""
-                    hello
-                    world
-                """)
+            '''\
+x = """
+hello
+world
+"""
 
-                y = """
-                    indented
-                    content
-                """
-            '''
-            )
+y = """
+    indented
+    content
+"""
+'''
         )
 
         run_cli(
@@ -340,7 +334,7 @@ class TestAddDedentCLI:
             line2
             """
                 return text
-        '''
+            '''
         )
         expected_output = snapshot(
             dedent(
@@ -352,7 +346,7 @@ class TestAddDedentCLI:
                         line2
                     """)
                     return text
-            '''
+                '''
             )
         )
 
@@ -368,17 +362,14 @@ class TestAddDedentCLI:
             '''            x = """
             content
             """
-        '''
+            '''
         )
         expected_output = snapshot(
-            dedent(
-                '''\
-                from textwrap import dedent
-                x = dedent("""
-                    content
-                """)
-            '''
-            )
+            '''\
+x = """
+content
+"""
+'''
         )
 
         run_cli(
@@ -400,22 +391,20 @@ class TestAddDedentCLI:
             y = """
             new string
             """
-        '''
+            '''
         )
         expected_output = snapshot(
-            dedent(
-                '''\
-                from textwrap import dedent
+            '''\
+from textwrap import dedent
 
-                x = dedent("""
-                    already wrapped
-                """)
+x = dedent("""
+    already wrapped
+""")
 
-                y = dedent("""
-                    new string
-                """)
-            '''
-            )
+y = """
+new string
+"""
+'''
         )
 
         run_cli(
@@ -430,35 +419,31 @@ class TestAddDedentCLI:
             '''            x = """
             hello
             """
-        '''
+            '''
         )
         input_source2 = dedent(
             '''            y = """
             world
             """
-        '''
+            '''
         )
 
         run_cli(
             args_list=["--add-dedent", "file1.py", "file2.py"],
             files_dict={"file1.py": input_source1, "file2.py": input_source2},
             expected_stdout=snapshot(
-                dedent(
-                    '''\
-                    === file1.py ===
-                    from textwrap import dedent
-                    x = dedent("""
-                        hello
-                    """)
+                '''\
+=== file1.py ===
+x = """
+hello
+"""
 
-                    === file2.py ===
-                    from textwrap import dedent
-                    y = dedent("""
-                        world
-                    """)
+=== file2.py ===
+y = """
+world
+"""
 
-                '''
-                )
+'''
             ),
         )
 
@@ -470,19 +455,16 @@ class TestAddDedentCLI:
             x = """
             content
             """
-        '''
+            '''
         )
         expected_output = snapshot(
-            dedent(
-                '''\
-                """Module docstring."""
-                from textwrap import dedent
+            '''\
+"""Module docstring."""
 
-                x = dedent("""
-                    content
-                """)
-            '''
-            )
+x = """
+content
+"""
+'''
         )
 
         run_cli(
