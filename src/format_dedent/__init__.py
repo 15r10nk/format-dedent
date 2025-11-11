@@ -1,6 +1,6 @@
 """format-dedent: Format multiline strings with proper indentation."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .formatter import format_dedent_strings, format_string_content, check_format
 from .add_dedent import add_dedent

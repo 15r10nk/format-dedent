@@ -1,6 +1,6 @@
 [project]
 name = "format-dedent"
-version = "0.1.0"
+version = "0.1.1"
 description = "Format only the literal string arguments of textwrap.dedent() calls"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 [project.scripts]
-format-dedent = "format_dedent.__main__:main"
+format-dedent = "format_dedent.cli:main"
 
 [project.optional-dependencies]
 dev = [
