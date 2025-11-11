@@ -5,11 +5,10 @@ repos:
     hooks:
       - id: format-dedent
         name: Format dedent strings
-        entry: format-dedent
-        language: python
+        entry: python3 src/format_dedent/__main__.py
+        language: system
         types: [python]
         args: [--in-place]
-        additional_dependencies: []
 
   # Standard pre-commit hooks for general code quality
   - repo: https://github.com/pre-commit/pre-commit-hooks

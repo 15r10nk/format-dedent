@@ -727,12 +727,12 @@ def func():
 SELECT *
 FROM users
 """
-    
+
     msg = """
 Hello
 World
 """
-    
+
     indented = """
     keep this
     as is
@@ -746,12 +746,12 @@ def func():
 SELECT *
 FROM users
 """)
-    
+
     msg = dedent("""
 Hello
 World
 """)
-    
+
     indented = """
     keep this
     as is

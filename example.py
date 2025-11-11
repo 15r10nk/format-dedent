@@ -4,12 +4,12 @@ l = [
     1,
     textwrap.dedent(
         """
-SELECT *
+        SELECT *
 
-FROM users    \n\
-WHERE active = true
-    AND age > 18
-"""
+        FROM users
+        WHERE active = true
+            AND age > 18
+        """
     ),
     2,
     3,
