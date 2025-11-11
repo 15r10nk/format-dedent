@@ -143,105 +143,87 @@ def check_format(original_code: str, formatted_code: str) -> bool:
     return True
 
 
+def add_parent_info(tree: ast.AST) -> None:
+    """Add parent attribute to every node in the AST."""
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            child.parent = parent  # type: ignore[attr-defined]
+
+
+def is_module_level_assignment(node: ast.Constant) -> bool:
+    """Check if a string constant is a direct value of a module-level assignment."""
+    if not hasattr(node, "parent"):
+        return False
+
+    parent = node.parent  # type: ignore[attr-defined]
+
+    # Check if parent is Assign or AnnAssign and node is the direct value
+    if isinstance(parent, (ast.Assign, ast.AnnAssign)):
+        if parent.value is node:
+            # Check if the assignment's parent is ast.Module (module level)
+            if hasattr(parent, "parent"):
+                assignment_parent = parent.parent  # type: ignore[attr-defined]
+                return isinstance(assignment_parent, ast.Module)
+    return False
+
+
+def is_in_dedent_call(node: ast.Constant) -> bool:
+    """Check if a string constant is inside a dedent() call."""
+    if not hasattr(node, "parent"):
+        return False
+
+    parent = node.parent  # type: ignore[attr-defined]
+
+    # Check if parent is a Call node with dedent function
+    if isinstance(parent, ast.Call) and parent.args and parent.args[0] is node:
+        func = parent.func
+        # Check for dedent() or textwrap.dedent()
+        if isinstance(func, ast.Name) and func.id == "dedent":
+            return True
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr == "dedent"
+            and isinstance(func.value, ast.Name)
+            and func.value.id == "textwrap"
+        ):
+            return True
+    return False
+
+
+def is_in_fstring(node: ast.Constant) -> bool:
+    """Check if a string constant is inside an f-string."""
+    if not hasattr(node, "parent"):
+        return False
+
+    # Walk up to check if any parent is a JoinedStr (f-string)
+    current = node
+    while hasattr(current, "parent"):
+        current = current.parent  # type: ignore[attr-defined]
+        if isinstance(current, ast.JoinedStr):
+            return True
+    return False
+
+
 class MultilineStringFinder(ast.NodeVisitor):
     """Find multiline string literals that are not already in dedent() calls."""
 
-    def __init__(self):
+    def __init__(self, tree: ast.AST):
         self.multiline_strings: List[ast.Constant] = []
-        self.dedent_string_ids: set = set()
-        self.module_level_assign_ids: set = set()
-        self.in_fstring = False
-        self.scope_depth = (
-            0  # Track if we're at module level (0) or inside function/class
-        )
-
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        """Track entering function scope."""
-        self.scope_depth += 1
-        self.generic_visit(node)
-        self.scope_depth -= 1
-
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        """Track entering async function scope."""
-        self.scope_depth += 1
-        self.generic_visit(node)
-        self.scope_depth -= 1
-
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        """Track entering class scope."""
-        self.scope_depth += 1
-        self.generic_visit(node)
-        self.scope_depth -= 1
-
-    def visit_Assign(self, node: ast.Assign) -> None:
-        """Track module-level assignments to skip their string values."""
-        if self.scope_depth == 0:
-            # This is a module-level assignment
-            # Only mark string constants that are DIRECTLY the value, not nested in calls
-            if isinstance(node.value, ast.Constant) and isinstance(
-                node.value.value, str
-            ):
-                self.module_level_assign_ids.add(id(node.value))
-        self.generic_visit(node)
-
-    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
-        """Track module-level annotated assignments to skip their string values."""
-        if self.scope_depth == 0 and node.value:
-            # This is a module-level annotated assignment with a value
-            # Only mark string constants that are DIRECTLY the value, not nested in calls
-            if isinstance(node.value, ast.Constant) and isinstance(
-                node.value.value, str
-            ):
-                self.module_level_assign_ids.add(id(node.value))
-        self.generic_visit(node)
-
-    def visit_Call(self, node: ast.Call) -> None:
-        """Track strings inside dedent() calls to skip them."""
-        is_dedent = False
-
-        if isinstance(node.func, ast.Attribute):
-            if (
-                node.func.attr == "dedent"
-                and isinstance(node.func.value, ast.Name)
-                and node.func.value.id == "textwrap"
-            ):
-                is_dedent = True
-        elif isinstance(node.func, ast.Name):
-            if node.func.id == "dedent":
-                is_dedent = True
-
-        if is_dedent and len(node.args) > 0:
-            arg = node.args[0]
-            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                # Mark this string as already in a dedent call
-                self.dedent_string_ids.add(id(arg))
-
-        self.generic_visit(node)
-
-    def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
-        """Visit f-strings and skip them (can't wrap f-strings with dedent)."""
-        # Set flag to skip any string constants inside f-strings
-        old_in_fstring = self.in_fstring
-        self.in_fstring = True
-        self.generic_visit(node)
-        self.in_fstring = old_in_fstring
+        # Add parent information to all nodes
+        add_parent_info(tree)
 
     def visit_Constant(self, node: ast.Constant) -> None:
         """Visit string constants to find multiline strings not in dedent()."""
-        # Skip if we're inside an f-string
-        if self.in_fstring:
-            self.generic_visit(node)
-            return
-
         # Check if the string literal spans multiple lines in the source code
-        # (not just if the string value contains newlines)
         if isinstance(node.value, str) and node.lineno != node.end_lineno:
-            # Only add if:
-            # 1. Not already tracked as being in a dedent() call
-            # 2. Not a module-level variable assignment
+            # Skip if:
+            # 1. Inside an f-string (can't wrap f-strings with dedent)
+            # 2. Already in a dedent() call
+            # 3. Direct value of a module-level assignment
             if (
-                id(node) not in self.dedent_string_ids
-                and id(node) not in self.module_level_assign_ids
+                not is_in_fstring(node)
+                and not is_in_dedent_call(node)
+                and not is_module_level_assignment(node)
             ):
                 self.multiline_strings.append(node)
 
@@ -274,7 +256,7 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         raise SyntaxError(f"Error parsing {filename}: {e}") from e
 
     # Find multiline strings not already in dedent() calls
-    finder = MultilineStringFinder()
+    finder = MultilineStringFinder(tree)
     finder.visit(tree)
 
     if not finder.multiline_strings:
