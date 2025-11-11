@@ -204,18 +204,19 @@ def is_in_fstring(node: ast.Constant) -> bool:
     return False
 
 
-class MultilineStringFinder(ast.NodeVisitor):
+def find_multiline_strings(tree: ast.AST) -> List[ast.Constant]:
     """Find multiline string literals that are not already in dedent() calls."""
+    # Add parent information to all nodes
+    add_parent_info(tree)
 
-    def __init__(self, tree: ast.AST):
-        self.multiline_strings: List[ast.Constant] = []
-        # Add parent information to all nodes
-        add_parent_info(tree)
-
-    def visit_Constant(self, node: ast.Constant) -> None:
-        """Visit string constants to find multiline strings not in dedent()."""
-        # Check if the string literal spans multiple lines in the source code
-        if isinstance(node.value, str) and node.lineno != node.end_lineno:
+    multiline_strings = []
+    for node in ast.walk(tree):
+        # Check if this is a string constant that spans multiple lines
+        if (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and node.lineno != node.end_lineno
+        ):
             # Skip if:
             # 1. Inside an f-string (can't wrap f-strings with dedent)
             # 2. Already in a dedent() call
@@ -225,9 +226,9 @@ class MultilineStringFinder(ast.NodeVisitor):
                 and not is_in_dedent_call(node)
                 and not is_module_level_assignment(node)
             ):
-                self.multiline_strings.append(node)
+                multiline_strings.append(node)
 
-        self.generic_visit(node)
+    return multiline_strings
 
 
 def add_dedent(source: str, filename: str = "<string>") -> str:
@@ -256,15 +257,14 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         raise SyntaxError(f"Error parsing {filename}: {e}") from e
 
     # Find multiline strings not already in dedent() calls
-    finder = MultilineStringFinder(tree)
-    finder.visit(tree)
+    multiline_strings = find_multiline_strings(tree)
 
-    if not finder.multiline_strings:
+    if not multiline_strings:
         return source
 
     # Check which strings would benefit from dedent
     strings_to_wrap = []
-    for node in finder.multiline_strings:
+    for node in multiline_strings:
         original = node.value
         dedented = textwrap.dedent(original)
         # Only wrap if dedenting doesn't change the string
