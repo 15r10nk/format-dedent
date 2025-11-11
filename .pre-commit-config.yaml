@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: format-dedent
         name: Format dedent strings
-        entry: python3 src/format_dedent/__main__.py
+        entry: env PYTHONPATH=src python3 -m format_dedent
         language: system
         types: [python]
         args: [--in-place]

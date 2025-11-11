@@ -5,7 +5,8 @@ import pytest
 import sys
 from inline_snapshot import snapshot
 
-from format_dedent.__main__ import format_dedent_strings, add_dedent
+from format_dedent.formatter import format_dedent_strings
+from format_dedent.add_dedent import add_dedent
 
 
 def format_source(code: str) -> str:
