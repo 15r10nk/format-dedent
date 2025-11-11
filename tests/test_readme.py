@@ -136,7 +136,7 @@ def process_readme_code_blocks(readme_content: str) -> str:
                                 i += 1
 
                             # Generate correct output
-                            dedent_code = add_dedent(code)
+                            dedent_code = format_dedent_strings(add_dedent(code))
                             for dedent_line in dedent_code.split("\n"):
                                 result_lines.append(dedent_line)
 

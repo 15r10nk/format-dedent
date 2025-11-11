@@ -18,7 +18,7 @@
 ## 📦 Installation
 
 ```bash
-pip install format-dedent
+uv tool install format-dedent
 ```
 
 ---
@@ -29,24 +29,24 @@ pip install format-dedent
 
 Preview formatted output without modifying files:
 ```bash
-python -m format_dedent yourfile.py
+uvx format-dedent yourfile.py
 ```
 
 Write changes to files:
 ```bash
-python -m format_dedent yourfile.py --write
+uvx format-dedent yourfile.py --write
 ```
 
 Format multiple files or directories:
 ```bash
-python -m format_dedent src/ tests/ --write
+uvx format-dedent src/ tests/ --write
 ```
 
 ### Add dedent() calls (--add-dedent mode)
 
 Automatically wrap multiline strings with `dedent()` calls:
 ```bash
-python -m format_dedent yourfile.py --add-dedent --write
+uvx format-dedent yourfile.py --add-dedent --write
 ```
 
 This will:
@@ -71,25 +71,6 @@ Options:
 - **Default** → Output formatted code to stdout (no file modification)
 - **`--write`** → Modify files directly and print confirmation
 
-**Examples:**
-
-```bash
-# Preview formatted code (output to stdout, no changes)
-python -m format_dedent myfile.py
-
-# Write changes to the file
-python -m format_dedent myfile.py --write
-
-# Format entire project
-python -m format_dedent src/ tests/ --write
-
-# Add dedent() to all multiline strings
-python -m format_dedent myfile.py --add-dedent --write
-
-# Read from stdin, write to stdout (pipe-friendly)
-cat myfile.py | python -m format_dedent > formatted.py
-```
-
 ---
 
 ## 🔧 Pre-commit Hook
@@ -106,16 +87,6 @@ repos:
       - id: format-dedent
 ```
 
-Then install the hook:
-```bash
-pre-commit install
-```
-
-Run manually on all files:
-```bash
-pre-commit run format-dedent --all-files
-```
-
 ---
 
 ## 💡 Examples
@@ -130,10 +101,10 @@ import textwrap
 
 def get_sql_query():
     return textwrap.dedent("""
-        SELECT users.name, orders.total
+SELECT users.name, orders.total
 FROM users
-            JOIN orders ON users.id = orders.user_id
-        WHERE orders.status = 'complete'
+JOIN orders ON users.id = orders.user_id
+WHERE orders.status = 'complete'
     """)
 ```
 
@@ -147,18 +118,12 @@ import textwrap
 
 def get_sql_query():
     return textwrap.dedent("""
-                SELECT users.name, orders.total
+        SELECT users.name, orders.total
         FROM users
-                    JOIN orders ON users.id = orders.user_id
-                WHERE orders.status = 'complete'
+        JOIN orders ON users.id = orders.user_id
+        WHERE orders.status = 'complete'
     """)
 ```
-
-✅ **What changed:**
-- Inconsistent indentation is normalized
-- Each line's indentation now reflects the SQL structure
-- Trailing whitespace removed
-- The formatted version shows what `dedent()` will produce at runtime
 
 **The key insight:** The indentation you see in the source code now matches what `dedent()` returns. When this code runs, `dedent()` strips the common leading whitespace, and you get properly formatted SQL.
 
@@ -183,9 +148,9 @@ This is a message.
 from textwrap import dedent
 def get_message():
     message = dedent("""
-Hello World!
-This is a message.
-""")
+        Hello World!
+        This is a message.
+    """)
     return message
 ```
 
@@ -229,74 +194,29 @@ def render_html():
     """)
 ```
 
-### Example 4: JSON template
 
-**Before:**
+---
 
-<!-- test: format-input -->
-```python
-import textwrap
+<!--[[[cog
+import requests,cog
 
-CONFIG = textwrap.dedent('''
-{
-  "name": "my-app",
-      "version": "1.0.0"
-}
-''')
-```
+url = "https://raw.githubusercontent.com/15r10nk/sponsors/refs/heads/main/sponsors_readme.md"
+response = requests.get(url)
+response.raise_for_status()  # Raise an exception for bad status codes
+cog.out(response.text)
+]]]-->
+## Sponsors
 
-**After:**
+I would like to thank my sponsors. Without them, I would not be able to invest so much time in my projects.
 
-<!-- test: format-output -->
-```python
-import textwrap
+### Silver sponsor 🥈
 
-CONFIG = textwrap.dedent('''
-    {
-      "name": "my-app",
-          "version": "1.0.0"
-    }
-''')
-```
-
-### Example 5: Error message with inconsistent indentation
-
-**Before:**
-
-<!-- test: format-input -->
-```python
-from textwrap import dedent
-
-def validate_user(user):
-    if not user.email:
-        raise ValueError(dedent("""
-            Invalid user configuration:
-                - Email is required
-            - Must be a valid email address
-                - Example: user@example.com
-        """))
-```
-
-**After:**
-
-<!-- test: format-output -->
-```python
-from textwrap import dedent
-
-def validate_user(user):
-    if not user.email:
-        raise ValueError(dedent("""
-            Invalid user configuration:
-                - Email is required
-            - Must be a valid email address
-                - Example: user@example.com
-        """))
-```
-
-✅ **What changed:**
-- Mixed indentation levels are now consistent
-- Each line's indentation shows the message structure
-- The formatted version visually matches what users will see at runtime
+<p align="center">
+  <a href="https://pydantic.dev/logfire">
+    <img src="https://pydantic.dev/assets/for-external/pydantic_logfire_logo_endorsed_lithium_rgb.svg" alt="logfire" width="300"/>
+  </a>
+</p>
+<!--[[[end]]]-->
 
 ---
 
@@ -305,9 +225,8 @@ def validate_user(user):
 1. **Parse** — Uses Python's AST module to analyze source code
 2. **Find** — Locates all `dedent()` or `textwrap.dedent()` calls with string arguments
 3. **Analyze** — Determines the appropriate indentation level based on context
-4. **Format** — Removes trailing whitespace and applies consistent indentation
-5. **Validate** — Ensures `dedent(original) == dedent(formatted)` (behavior unchanged)
-6. **Replace** — Updates the source file with formatted strings
+4. **Validate** — Ensures `dedent(original) == dedent(formatted)` (behavior unchanged)
+5. **Replace** — Updates the source file with formatted strings
 
 **The key insight:** Strings are formatted in the source to visually match their runtime output after `dedent()` processes them. This makes the code more readable without changing behavior.
 
@@ -363,34 +282,7 @@ pytest -v
 pytest tests/test_formatter.py
 ```
 
-### Test Suite
-
-The project includes **51 comprehensive tests** covering:
-- ✅ Module, function, and class level dedent formatting
-- ✅ Nested blocks (if, for, try/except)
-- ✅ Quote style preservation (`"""` and `'''`)
-- ✅ Backslash line continuations
-- ✅ Real-world examples (SQL, HTML, JSON templates)
-- ✅ Edge cases and error handling
-- ✅ CLI integration tests
-
 Tests use [inline-snapshot](https://15r10nk.github.io/inline-snapshot/) for snapshot testing.
-
-### Project Structure
-
-```
-format-dedent/
-├── src/format_dedent/
-│   ├── __init__.py          # Package exports
-│   ├── __main__.py          # Entry point
-│   ├── cli.py               # CLI interface
-│   ├── formatter.py         # String formatting logic
-│   ├── add_dedent.py        # Add dedent() calls
-│   └── ast_helpers.py       # AST analysis utilities
-└── tests/
-    ├── test_formatter.py    # Formatting tests
-    └── test_cli.py          # CLI integration tests
-```
 
 ---
 
@@ -403,10 +295,3 @@ MIT License - See LICENSE file for details
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-## ⭐ Related Projects
-
-- [Black](https://github.com/psf/black) — The uncompromising Python code formatter
-- [inline-snapshot](https://github.com/15r10nk/inline-snapshot) — Snapshot testing for Python
