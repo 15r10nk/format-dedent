@@ -4,4 +4,4 @@
   entry: format-dedent
   language: python
   types: [python]
-  args: [--in-place]
+  args: [--write]

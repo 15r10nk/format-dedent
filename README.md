@@ -27,26 +27,26 @@ pip install format-dedent
 
 ### Format strings (default mode)
 
-Preview changes without modifying files:
+Preview formatted output without modifying files:
 ```bash
-python -m format_dedent yourfile.py --dry-run
+python -m format_dedent yourfile.py
 ```
 
-Apply formatting in-place:
+Write changes to files:
 ```bash
-python -m format_dedent yourfile.py --in-place
+python -m format_dedent yourfile.py --write
 ```
 
 Format multiple files or directories:
 ```bash
-python -m format_dedent src/ tests/ --in-place
+python -m format_dedent src/ tests/ --write
 ```
 
 ### Add dedent() calls (--add-dedent mode)
 
 Automatically wrap multiline strings with `dedent()` calls:
 ```bash
-python -m format_dedent yourfile.py --add-dedent --in-place
+python -m format_dedent yourfile.py --add-dedent --write
 ```
 
 This will:
@@ -62,28 +62,31 @@ This will:
 python -m format_dedent [OPTIONS] [FILES/DIRECTORIES]
 
 Options:
-  -i, --in-place    Modify files in place
-  -d, --dry-run     Preview changes without modifying files
+  -w, --write       Write changes to files (default: output to stdout)
   --add-dedent      Add dedent() calls to multiline strings
   -h, --help        Show help message
 ```
 
+**Behavior:**
+- **Default** → Output formatted code to stdout (no file modification)
+- **`--write`** → Modify files directly and print confirmation
+
 **Examples:**
 
 ```bash
-# Preview changes
-python -m format_dedent myfile.py --dry-run
+# Preview formatted code (output to stdout, no changes)
+python -m format_dedent myfile.py
 
-# Format a single file
-python -m format_dedent myfile.py -i
+# Write changes to the file
+python -m format_dedent myfile.py --write
 
 # Format entire project
-python -m format_dedent src/ -i
+python -m format_dedent src/ tests/ --write
 
 # Add dedent() to all multiline strings
-python -m format_dedent myfile.py --add-dedent -i
+python -m format_dedent myfile.py --add-dedent --write
 
-# Read from stdin, write to stdout
+# Read from stdin, write to stdout (pipe-friendly)
 cat myfile.py | python -m format_dedent > formatted.py
 ```
 

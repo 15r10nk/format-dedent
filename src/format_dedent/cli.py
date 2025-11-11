@@ -52,13 +52,10 @@ def main():
         help="Python source file(s) or folder(s) to format (reads from stdin if not provided)",
     )
     parser.add_argument(
-        "-i", "--in-place", action="store_true", help="Modify the file in place"
-    )
-    parser.add_argument(
-        "-d",
-        "--dry-run",
+        "-w",
+        "--write",
         action="store_true",
-        help="Show what would be changed without modifying the file",
+        help="Write changes to files (default: output to stdout)",
     )
     parser.add_argument(
         "--add-dedent",
@@ -70,8 +67,8 @@ def main():
 
     # If no paths provided, read from stdin and write to stdout
     if not args.paths:
-        if args.in_place:
-            print("Error: --in-place cannot be used with stdin input", file=sys.stderr)
+        if args.write:
+            print("Error: --write cannot be used with stdin input", file=sys.stderr)
             sys.exit(1)
 
         source = sys.stdin.read()
@@ -116,11 +113,11 @@ def main():
     for file_path in files_to_format:
         formatted = format_file(
             file_path,
-            in_place=args.in_place and not args.dry_run,
+            in_place=args.write,
             add_dedent_mode=args.add_dedent,
         )
 
-        if args.dry_run or not args.in_place:
+        if not args.write:
             # For multiple files, show which file is being displayed
             if len(files_to_format) > 1:
                 sys.stdout.write(f"=== {file_path} ===\n")

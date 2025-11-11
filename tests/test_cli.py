@@ -144,7 +144,7 @@ class TestCLIBasics:
     def test_single_file_in_place(self):
         """Test formatting a single file in-place."""
         run_cli(
-            args_list=["--in-place", "test.py"],
+            args_list=["--write", "test.py"],
             files_dict={"test.py": SOURCE},
             changed_files_dict={"test.py": EXPECTED},
         )
@@ -181,7 +181,7 @@ class TestCLIBasics:
     def test_directory(self):
         """Test formatting all Python files in a directory."""
         run_cli(
-            args_list=["--in-place", "src"],
+            args_list=["--write", "src"],
             files_dict={
                 "src/test1.py": SOURCE,
                 "src/test2.py": SOURCE,
@@ -198,15 +198,6 @@ class TestCLIBasics:
             args_list=[],
             stdin_input=SOURCE,
             expected_stdout=EXPECTED,
-        )
-
-    def test_dry_run(self):
-        """Test dry-run mode doesn't modify files."""
-        run_cli(
-            args_list=["--dry-run", "test.py"],
-            files_dict={"test.py": SOURCE},
-            expected_stdout=EXPECTED,
-            changed_files_dict={"test.py": SOURCE},  # Should remain unchanged
         )
 
 
@@ -252,7 +243,7 @@ class TestCLIReturnCodes:
     def test_successful_format_returns_zero(self):
         """Test that successful formatting returns exit code 0."""
         run_cli(
-            args_list=["--in-place", "test.py"],
+            args_list=["--write", "test.py"],
             files_dict={"test.py": SOURCE},
             return_code=0,
         )
@@ -326,7 +317,7 @@ y = """
         )
 
     def test_add_dedent_in_place(self):
-        """Test --add-dedent with --in-place."""
+        """Test --add-dedent with --write."""
         input_source = dedent(
             '''            def func():
                 text = """
@@ -351,32 +342,9 @@ y = """
         )
 
         run_cli(
-            args_list=["--add-dedent", "--in-place", "test.py"],
+            args_list=["--add-dedent", "--write", "test.py"],
             files_dict={"test.py": input_source},
             changed_files_dict={"test.py": expected_output},
-        )
-
-    def test_add_dedent_dry_run(self):
-        """Test --add-dedent with --dry-run (doesn't modify file)."""
-        input_source = dedent(
-            '''            x = """
-            content
-            """
-            '''
-        )
-        expected_output = snapshot(
-            '''\
-x = """
-content
-"""
-'''
-        )
-
-        run_cli(
-            args_list=["--add-dedent", "--dry-run", "test.py"],
-            files_dict={"test.py": input_source},
-            expected_stdout=expected_output,
-            changed_files_dict={"test.py": input_source},  # Should remain unchanged
         )
 
     def test_add_dedent_preserves_existing_dedent(self):
