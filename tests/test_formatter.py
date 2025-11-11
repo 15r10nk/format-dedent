@@ -4,7 +4,7 @@ import pytest
 import sys
 from inline_snapshot import snapshot
 
-from format_dedent.__main__ import format_dedent_strings
+from format_dedent.__main__ import format_dedent_strings, add_dedent
 
 
 def format_source(code: str) -> str:
@@ -617,6 +617,226 @@ text = dedent('''\\
     Second line
 ''')
 """)
+
+
+class TestAddDedent:
+    """Test the add_dedent function that wraps multiline strings with dedent()."""
+
+    def test_wraps_simple_multiline_string(self):
+        """Simple multiline string should be wrapped with dedent()."""
+        source = '''\
+x = """
+hello
+world
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+from textwrap import dedent
+x = dedent("""
+hello
+world
+""")
+''')
+
+    def test_preserves_indented_string(self):
+        """String with indentation should not be wrapped (dedent would change it)."""
+        source = '''\
+x = """
+    indented
+    content
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+x = """
+    indented
+    content
+"""
+''')
+
+    def test_skips_existing_dedent(self):
+        """Strings already in dedent() should not be double-wrapped."""
+        source = '''\
+from textwrap import dedent
+
+x = dedent("""
+already wrapped
+""")
+
+y = """
+not wrapped
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+from textwrap import dedent
+
+x = dedent("""
+already wrapped
+""")
+
+y = dedent("""
+not wrapped
+""")
+''')
+
+    def test_adds_import_after_docstring(self):
+        """Import should be added after module docstring."""
+        source = '''\
+"""Module docstring."""
+
+x = """
+content
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+"""Module docstring."""
+from textwrap import dedent
+
+x = dedent("""
+content
+""")
+''')
+
+    def test_skips_single_line_strings(self):
+        """Single-line strings should not be wrapped."""
+        source = '''\
+x = "single line"
+y = """single line"""
+z = """
+multiline
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+from textwrap import dedent
+x = "single line"
+y = """single line"""
+z = dedent("""
+multiline
+""")
+''')
+
+    def test_multiple_strings_in_function(self):
+        """Multiple multiline strings in a function."""
+        source = '''\
+def func():
+    sql = """
+SELECT *
+FROM users
+"""
+    
+    msg = """
+Hello
+World
+"""
+    
+    indented = """
+    keep this
+    as is
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+from textwrap import dedent
+def func():
+    sql = dedent("""
+SELECT *
+FROM users
+""")
+    
+    msg = dedent("""
+Hello
+World
+""")
+    
+    indented = """
+    keep this
+    as is
+"""
+''')
+
+    def test_with_existing_textwrap_import(self):
+        """Should not add duplicate import if textwrap already imported."""
+        source = '''\
+import textwrap
+
+x = """
+content
+"""
+'''
+        result = add_dedent(source)
+        # Should not add "from textwrap import dedent" since textwrap is imported
+        assert result == snapshot('''\
+import textwrap
+
+x = dedent("""
+content
+""")
+''')
+
+    def test_with_existing_dedent_import(self):
+        """Should not add duplicate import if dedent already imported."""
+        source = '''\
+from textwrap import dedent
+
+x = """
+content
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+from textwrap import dedent
+
+x = dedent("""
+content
+""")
+''')
+
+    def test_complex_example(self):
+        """Complex real-world example with mixed content."""
+        source = '''\
+"""Database utilities."""
+
+def get_query():
+    sql = """
+SELECT id, name
+FROM users
+"""
+    return sql
+
+TEMPLATE = """
+    This is indented
+    Keep as is
+"""
+
+SIMPLE = """
+no indent
+"""
+'''
+        result = add_dedent(source)
+        assert result == snapshot('''\
+"""Database utilities."""
+from textwrap import dedent
+
+def get_query():
+    sql = dedent("""
+SELECT id, name
+FROM users
+""")
+    return sql
+
+TEMPLATE = """
+    This is indented
+    Keep as is
+"""
+
+SIMPLE = dedent("""
+no indent
+""")
+''')
 
 
 if __name__ == "__main__":

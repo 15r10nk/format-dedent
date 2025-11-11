@@ -250,6 +250,188 @@ class TestCLIReturnCodes:
         )
 
 
+class TestAddDedentCLI:
+    """Test the --add-dedent CLI flag."""
+    
+    def test_add_dedent_stdin(self):
+        """Test --add-dedent with stdin input."""
+        input_source = '''x = """
+hello
+world
+"""
+'''
+        run_cli(
+            args_list=["--add-dedent"],
+            stdin_input=input_source,
+            expected_stdout=snapshot('''\
+from textwrap import dedent
+x = dedent("""
+    hello
+    world
+""")
+'''),
+        )
+    
+    def test_add_dedent_file(self):
+        """Test --add-dedent with a file."""
+        input_source = '''x = """
+hello
+world
+"""
+
+y = """
+    indented
+    content
+"""
+'''
+        expected_output = snapshot('''\
+from textwrap import dedent
+x = dedent("""
+    hello
+    world
+""")
+
+y = """
+    indented
+    content
+"""
+''')
+        
+        run_cli(
+            args_list=["--add-dedent", "test.py"],
+            files_dict={"test.py": input_source},
+            expected_stdout=expected_output,
+        )
+    
+    def test_add_dedent_in_place(self):
+        """Test --add-dedent with --in-place."""
+        input_source = '''def func():
+    text = """
+line1
+line2
+"""
+    return text
+'''
+        expected_output = snapshot('''\
+from textwrap import dedent
+def func():
+    text = dedent("""
+        line1
+        line2
+    """)
+    return text
+''')
+        
+        run_cli(
+            args_list=["--add-dedent", "--in-place", "test.py"],
+            files_dict={"test.py": input_source},
+            changed_files_dict={"test.py": expected_output},
+        )
+    
+    def test_add_dedent_dry_run(self):
+        """Test --add-dedent with --dry-run (doesn't modify file)."""
+        input_source = '''x = """
+content
+"""
+'''
+        expected_output = snapshot('''\
+from textwrap import dedent
+x = dedent("""
+    content
+""")
+''')
+        
+        run_cli(
+            args_list=["--add-dedent", "--dry-run", "test.py"],
+            files_dict={"test.py": input_source},
+            expected_stdout=expected_output,
+            changed_files_dict={"test.py": input_source},  # Should remain unchanged
+        )
+    
+    def test_add_dedent_preserves_existing_dedent(self):
+        """Test that --add-dedent doesn't double-wrap existing dedent calls."""
+        input_source = '''from textwrap import dedent
+
+x = dedent("""
+already wrapped
+""")
+
+y = """
+new string
+"""
+'''
+        expected_output = snapshot('''\
+from textwrap import dedent
+
+x = dedent("""
+    already wrapped
+""")
+
+y = dedent("""
+    new string
+""")
+''')
+        
+        run_cli(
+            args_list=["--add-dedent", "test.py"],
+            files_dict={"test.py": input_source},
+            expected_stdout=expected_output,
+        )
+    
+    def test_add_dedent_multiple_files(self):
+        """Test --add-dedent with multiple files."""
+        input_source1 = '''x = """
+hello
+"""
+'''
+        input_source2 = '''y = """
+world
+"""
+'''
+        
+        run_cli(
+            args_list=["--add-dedent", "file1.py", "file2.py"],
+            files_dict={"file1.py": input_source1, "file2.py": input_source2},
+            expected_stdout=snapshot('''\
+=== file1.py ===
+from textwrap import dedent
+x = dedent("""
+    hello
+""")
+
+=== file2.py ===
+from textwrap import dedent
+y = dedent("""
+    world
+""")
+
+'''),
+        )
+    
+    def test_add_dedent_with_docstring(self):
+        """Test --add-dedent with module docstring."""
+        input_source = '''"""Module docstring."""
+
+x = """
+content
+"""
+'''
+        expected_output = snapshot('''\
+"""Module docstring."""
+from textwrap import dedent
+
+x = dedent("""
+    content
+""")
+''')
+        
+        run_cli(
+            args_list=["--add-dedent", "test.py"],
+            files_dict={"test.py": input_source},
+            expected_stdout=expected_output,
+        )
+
+
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])

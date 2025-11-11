@@ -139,6 +139,166 @@ def check_format(original_code: str, formatted_code: str) -> bool:
     return True
 
 
+class MultilineStringFinder(ast.NodeVisitor):
+    """Find multiline string literals that are not already in dedent() calls."""
+
+    def __init__(self):
+        self.multiline_strings: List[ast.Constant] = []
+        self.dedent_string_ids: set = set()
+
+    def visit_Call(self, node: ast.Call) -> None:
+        """Track strings inside dedent() calls to skip them."""
+        is_dedent = False
+        
+        if isinstance(node.func, ast.Attribute):
+            if (node.func.attr == "dedent" and
+                isinstance(node.func.value, ast.Name) and
+                node.func.value.id == "textwrap"):
+                is_dedent = True
+        elif isinstance(node.func, ast.Name):
+            if node.func.id == "dedent":
+                is_dedent = True
+        
+        if is_dedent and len(node.args) > 0:
+            arg = node.args[0]
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                # Mark this string as already in a dedent call
+                self.dedent_string_ids.add(id(arg))
+        
+        self.generic_visit(node)
+
+    def visit_Constant(self, node: ast.Constant) -> None:
+        """Visit string constants to find multiline strings not in dedent()."""
+        if isinstance(node.value, str) and '\n' in node.value:
+            # Only add if not already tracked as being in a dedent() call
+            if id(node) not in self.dedent_string_ids:
+                self.multiline_strings.append(node)
+        
+        self.generic_visit(node)
+
+
+def add_dedent(source: str, filename: str = "<string>") -> str:
+    """
+    Add dedent() calls to multiline strings where dedent(str) == str.
+    
+    This wraps multiline strings with textwrap.dedent() when they would
+    benefit from it (i.e., when dedenting would not change the string).
+    Also adds the necessary import if not present.
+    
+    Args:
+        source: Python source code as a string
+        filename: Optional filename for error messages (default: "<string>")
+        
+    Returns:
+        The modified source code with dedent() calls added
+    """
+    import textwrap
+    
+    source_lines = source.splitlines(keepends=True)
+    
+    # Parse the AST
+    try:
+        tree = ast.parse(source, filename=filename)
+    except SyntaxError as e:
+        raise SyntaxError(f"Error parsing {filename}: {e}") from e
+    
+    # Find multiline strings not already in dedent() calls
+    finder = MultilineStringFinder()
+    finder.visit(tree)
+    
+    if not finder.multiline_strings:
+        return source
+    
+    # Check which strings would benefit from dedent
+    strings_to_wrap = []
+    for node in finder.multiline_strings:
+        original = node.value
+        dedented = textwrap.dedent(original)
+        # Only wrap if dedenting doesn't change the string
+        if original == dedented:
+            strings_to_wrap.append(node)
+    
+    if not strings_to_wrap:
+        return source
+    
+    # Sort by position (reverse order so we can replace from bottom to top)
+    strings_to_wrap = sorted(strings_to_wrap, key=lambda n: (n.lineno, n.col_offset), reverse=True)
+    
+    # Convert source to list of characters for easier manipulation
+    source_chars = list(source)
+    
+    # Wrap each string with dedent()
+    for node in strings_to_wrap:
+        start_line = node.lineno - 1
+        end_line = node.end_lineno - 1
+        
+        start_pos = sum(len(line) for line in source_lines[:start_line]) + node.col_offset
+        end_pos = sum(len(line) for line in source_lines[:end_line]) + node.end_col_offset
+        
+        # Get the original string literal
+        original_literal = ''.join(source_chars[start_pos:end_pos])
+        
+        # Wrap with dedent()
+        wrapped = f"dedent({original_literal})"
+        
+        # Replace in source
+        source_chars[start_pos:end_pos] = list(wrapped)
+    
+    result = ''.join(source_chars)
+    
+    # Check if textwrap import exists
+    tree = ast.parse(result, filename=filename)
+    has_textwrap_import = False
+    has_dedent_import = False
+    
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "textwrap":
+                    has_textwrap_import = True
+        elif isinstance(node, ast.ImportFrom):
+            if node.module == "textwrap":
+                for alias in node.names:
+                    if alias.name == "dedent":
+                        has_dedent_import = True
+    
+    # Add import if needed
+    if not has_textwrap_import and not has_dedent_import:
+        # Find the right place to add the import (after any docstring, before other code)
+        lines = result.splitlines(keepends=True)
+        insert_pos = 0
+        
+        # Skip shebang and encoding declarations
+        for i, line in enumerate(lines):
+            if line.startswith('#'):
+                insert_pos = i + 1
+            else:
+                break
+        
+        # Skip module docstring if present
+        try:
+            tree = ast.parse(result)
+            if (tree.body and isinstance(tree.body[0], ast.Expr) and
+                isinstance(tree.body[0].value, ast.Constant) and
+                isinstance(tree.body[0].value.value, str)):
+                # There's a module docstring
+                docstring_end_line = tree.body[0].end_lineno
+                insert_pos = docstring_end_line
+        except (SyntaxError, AttributeError):
+            pass
+        
+        # Insert the import
+        import_line = "from textwrap import dedent\n"
+        if insert_pos < len(lines):
+            lines.insert(insert_pos, import_line)
+        else:
+            lines.append(import_line)
+        
+        result = ''.join(lines)
+    
+    return result
+
+
 def format_dedent_strings(source: str, filename: str = "<string>") -> str:
     """
     Format only the literal string arguments of textwrap.dedent() calls.
@@ -247,13 +407,14 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
     return formatted_source
 
 
-def format_file(file_path: Path, in_place: bool = False) -> str:
+def format_file(file_path: Path, in_place: bool = False, add_dedent_mode: bool = False) -> str:
     """
     Format dedent strings in a file.
 
     Args:
         file_path: Path to the Python source file
         in_place: If True, modify the file in place
+        add_dedent_mode: If True, add dedent() calls instead of formatting existing ones
 
     Returns:
         The formatted source code
@@ -261,7 +422,9 @@ def format_file(file_path: Path, in_place: bool = False) -> str:
     source = file_path.read_text()
 
     try:
-        formatted = format_dedent_strings(source, filename=str(file_path))
+        if add_dedent_mode:
+            formatted = add_dedent(source, filename=str(file_path))
+        formatted = format_dedent_strings(formatted if add_dedent_mode else source, filename=str(file_path))
     except SyntaxError as e:
         print(f"{e}", file=sys.stderr)
         sys.exit(1)
@@ -293,6 +456,11 @@ def main():
         action="store_true",
         help="Show what would be changed without modifying the file"
     )
+    parser.add_argument(
+        "--add-dedent",
+        action="store_true",
+        help="Add dedent() calls to multiline strings where dedent(str) == str"
+    )
 
     args = parser.parse_args()
 
@@ -304,7 +472,9 @@ def main():
         
         source = sys.stdin.read()
         try:
-            formatted = format_dedent_strings(source, filename="<stdin>")
+            if args.add_dedent:
+                formatted = add_dedent(source, filename="<stdin>")
+            formatted = format_dedent_strings(formatted if args.add_dedent else source, filename="<stdin>")
         except SyntaxError as e:
             print(f"{e}", file=sys.stderr)
             sys.exit(1)
@@ -338,7 +508,11 @@ def main():
     
     # Format each file
     for file_path in files_to_format:
-        formatted = format_file(file_path, in_place=args.in_place and not args.dry_run)
+        formatted = format_file(
+            file_path,
+            in_place=args.in_place and not args.dry_run,
+            add_dedent_mode=args.add_dedent
+        )
         
         if args.dry_run or not args.in_place:
             # For multiple files, show which file is being displayed
