@@ -248,6 +248,11 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         strings_to_wrap, key=lambda n: (n.lineno, n.col_offset), reverse=True
     )
 
+    # Pre-calculate cumulative line positions for O(n) lookups instead of O(n²)
+    line_positions = [0]
+    for line in source_lines:
+        line_positions.append(line_positions[-1] + len(line))
+
     # Convert source to list of characters for easier manipulation
     source_chars = list(source)
 
@@ -256,12 +261,9 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         start_line = node.lineno - 1
         end_line = node.end_lineno - 1
 
-        start_pos = (
-            sum(len(line) for line in source_lines[:start_line]) + node.col_offset
-        )
-        end_pos = (
-            sum(len(line) for line in source_lines[:end_line]) + node.end_col_offset
-        )
+        # Calculate positions using pre-calculated line positions
+        start_pos = line_positions[start_line] + node.col_offset
+        end_pos = line_positions[end_line] + node.end_col_offset
 
         # Get the original string literal
         original_literal = "".join(source_chars[start_pos:end_pos])
@@ -363,6 +365,11 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         reverse=True,
     )
 
+    # Pre-calculate cumulative line positions for O(n) lookups instead of O(n²)
+    line_positions = [0]
+    for line in source_lines:
+        line_positions.append(line_positions[-1] + len(line))
+
     # Convert source to list of characters for easier manipulation
     source_chars = list(source)
 
@@ -377,9 +384,9 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         start_line = lineno - 1
         end_line = end_lineno - 1
 
-        # Calculate actual position in source
-        start_pos = sum(len(line) for line in source_lines[:start_line]) + col_offset
-        end_pos = sum(len(line) for line in source_lines[:end_line]) + end_col_offset
+        # Calculate actual position in source using pre-calculated positions
+        start_pos = line_positions[start_line] + col_offset
+        end_pos = line_positions[end_line] + end_col_offset
 
         # Extract the original string literal (including quotes)
         original_literal = "".join(source_chars[start_pos:end_pos])
