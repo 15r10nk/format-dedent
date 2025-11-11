@@ -151,11 +151,13 @@ def get_sql_query():
     """)
 ```
 
-✅ **Benefits:**
-- Content is visually aligned and easy to read
+✅ **What changed:**
+- Inconsistent indentation is normalized
+- Each line's indentation now reflects the SQL structure
 - Trailing whitespace removed
-- Indentation matches the runtime output
-- SQL structure is immediately clear
+- The formatted version shows what `dedent()` will produce at runtime
+
+**The key insight:** The indentation you see in the source code now matches what `dedent()` returns. When this code runs, `dedent()` strips the common leading whitespace, and you get properly formatted SQL.
 
 ### Example 2: Using --add-dedent mode
 
@@ -165,9 +167,9 @@ def get_sql_query():
 ```python
 def get_message():
     message = """
-    Hello World!
-    This is a message.
-    """
+Hello World!
+This is a message.
+"""
     return message
 ```
 
@@ -175,18 +177,22 @@ def get_message():
 
 <!-- test: add-dedent-output -->
 ```python
+from textwrap import dedent
 def get_message():
-    message = """
-    Hello World!
-    This is a message.
-    """
+    message = dedent("""
+Hello World!
+This is a message.
+""")
     return message
 ```
 
-The tool automatically:
-1. Wraps the string with `dedent()`
-2. Adds the import statement
-3. Formats the content
+✅ **What changed:**
+1. Detected that the string has no leading whitespace (left-aligned)
+2. Wrapped it with `dedent()` for consistency
+3. Added the import statement automatically
+4. Reformatted with proper indentation matching the code structure
+
+**Why use dedent here?** Even though this string doesn't need dedenting now, using `dedent()` consistently makes it easier to modify the string later. You can add indentation for readability without affecting the runtime output.
 
 ### Example 3: HTML template formatting
 
@@ -250,7 +256,7 @@ CONFIG = textwrap.dedent('''
 ''')
 ```
 
-### Example 5: Nested function with dedent
+### Example 5: Error message with inconsistent indentation
 
 **Before:**
 
@@ -258,16 +264,14 @@ CONFIG = textwrap.dedent('''
 ```python
 from textwrap import dedent
 
-class DatabaseQuery:
-    def get_users(self):
-        if self.active_only:
-            query = dedent("""
-                SELECT * FROM users
-                WHERE status = 'active'
-                    AND deleted_at IS NULL
-                ORDER BY created_at DESC
-            """)
-            return query
+def validate_user(user):
+    if not user.email:
+        raise ValueError(dedent("""
+            Invalid user configuration:
+                - Email is required
+            - Must be a valid email address
+                - Example: user@example.com
+        """))
 ```
 
 **After:**
@@ -276,17 +280,20 @@ class DatabaseQuery:
 ```python
 from textwrap import dedent
 
-class DatabaseQuery:
-    def get_users(self):
-        if self.active_only:
-            query = dedent("""
-                SELECT * FROM users
-                WHERE status = 'active'
-                    AND deleted_at IS NULL
-                ORDER BY created_at DESC
-            """)
-            return query
+def validate_user(user):
+    if not user.email:
+        raise ValueError(dedent("""
+            Invalid user configuration:
+                - Email is required
+            - Must be a valid email address
+                - Example: user@example.com
+        """))
 ```
+
+✅ **What changed:**
+- Mixed indentation levels are now consistent
+- Each line's indentation shows the message structure
+- The formatted version visually matches what users will see at runtime
 
 ---
 
