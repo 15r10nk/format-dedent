@@ -10,6 +10,13 @@ repos:
         types: [python]
         args: [--in-place]
 
+  # Black - Python code formatter
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3
+
   # Standard pre-commit hooks for general code quality
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0

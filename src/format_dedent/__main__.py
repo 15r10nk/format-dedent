@@ -22,9 +22,11 @@ class DedentStringFinder(ast.NodeVisitor):
 
         if isinstance(node.func, ast.Attribute):
             # textwrap.dedent() form
-            if (node.func.attr == "dedent" and
-                isinstance(node.func.value, ast.Name) and
-                node.func.value.id == "textwrap"):
+            if (
+                node.func.attr == "dedent"
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "textwrap"
+            ):
                 is_dedent = True
         elif isinstance(node.func, ast.Name):
             # dedent() form (imported directly)
@@ -59,7 +61,7 @@ def format_string_content(content: str, indent_level: int = 0) -> str:
     dedented = textwrap.dedent(content)
 
     # Remove leading/trailing empty lines
-    lines = dedented.split('\n')
+    lines = dedented.split("\n")
 
     # Find first and last non-empty lines
     first_non_empty = 0
@@ -77,20 +79,20 @@ def format_string_content(content: str, indent_level: int = 0) -> str:
 
     # Keep leading/trailing empty lines but process the content
     result_lines = []
-    indent_str = ' ' * indent_level  # Use the exact indentation level passed
+    indent_str = " " * indent_level  # Use the exact indentation level passed
 
     for i, line in enumerate(lines):
         if i < first_non_empty or i > last_non_empty:
             # Keep empty lines at start/end empty
-            result_lines.append('')
+            result_lines.append("")
         elif line.strip():
             # Non-empty line: add indentation (preserve trailing whitespace)
             result_lines.append(indent_str + line)
         else:
             # Empty line in the middle: keep it empty
-            result_lines.append('')
+            result_lines.append("")
 
-    return '\n'.join(result_lines)
+    return "\n".join(result_lines)
 
 
 def check_format(original_code: str, formatted_code: str) -> bool:
@@ -129,7 +131,9 @@ def check_format(original_code: str, formatted_code: str) -> bool:
         return False
 
     # Compare each pair of dedent strings
-    for orig_node, fmt_node in zip(original_finder.dedent_strings, formatted_finder.dedent_strings):
+    for orig_node, fmt_node in zip(
+        original_finder.dedent_strings, formatted_finder.dedent_strings
+    ):
         orig_dedented = textwrap.dedent(orig_node.value)
         fmt_dedented = textwrap.dedent(fmt_node.value)
 
@@ -151,9 +155,11 @@ class MultilineStringFinder(ast.NodeVisitor):
         is_dedent = False
 
         if isinstance(node.func, ast.Attribute):
-            if (node.func.attr == "dedent" and
-                isinstance(node.func.value, ast.Name) and
-                node.func.value.id == "textwrap"):
+            if (
+                node.func.attr == "dedent"
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "textwrap"
+            ):
                 is_dedent = True
         elif isinstance(node.func, ast.Name):
             if node.func.id == "dedent":
@@ -169,7 +175,7 @@ class MultilineStringFinder(ast.NodeVisitor):
 
     def visit_Constant(self, node: ast.Constant) -> None:
         """Visit string constants to find multiline strings not in dedent()."""
-        if isinstance(node.value, str) and '\n' in node.value:
+        if isinstance(node.value, str) and "\n" in node.value:
             # Only add if not already tracked as being in a dedent() call
             if id(node) not in self.dedent_string_ids:
                 self.multiline_strings.append(node)
@@ -222,7 +228,9 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         return source
 
     # Sort by position (reverse order so we can replace from bottom to top)
-    strings_to_wrap = sorted(strings_to_wrap, key=lambda n: (n.lineno, n.col_offset), reverse=True)
+    strings_to_wrap = sorted(
+        strings_to_wrap, key=lambda n: (n.lineno, n.col_offset), reverse=True
+    )
 
     # Convert source to list of characters for easier manipulation
     source_chars = list(source)
@@ -232,11 +240,15 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         start_line = node.lineno - 1
         end_line = node.end_lineno - 1
 
-        start_pos = sum(len(line) for line in source_lines[:start_line]) + node.col_offset
-        end_pos = sum(len(line) for line in source_lines[:end_line]) + node.end_col_offset
+        start_pos = (
+            sum(len(line) for line in source_lines[:start_line]) + node.col_offset
+        )
+        end_pos = (
+            sum(len(line) for line in source_lines[:end_line]) + node.end_col_offset
+        )
 
         # Get the original string literal
-        original_literal = ''.join(source_chars[start_pos:end_pos])
+        original_literal = "".join(source_chars[start_pos:end_pos])
 
         # Wrap with dedent()
         wrapped = f"dedent({original_literal})"
@@ -244,7 +256,7 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         # Replace in source
         source_chars[start_pos:end_pos] = list(wrapped)
 
-    result = ''.join(source_chars)
+    result = "".join(source_chars)
 
     # Check if textwrap import exists
     tree = ast.parse(result, filename=filename)
@@ -270,7 +282,7 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
 
         # Skip shebang and encoding declarations
         for i, line in enumerate(lines):
-            if line.startswith('#'):
+            if line.startswith("#"):
                 insert_pos = i + 1
             else:
                 break
@@ -278,9 +290,12 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         # Skip module docstring if present
         try:
             tree = ast.parse(result)
-            if (tree.body and isinstance(tree.body[0], ast.Expr) and
-                isinstance(tree.body[0].value, ast.Constant) and
-                isinstance(tree.body[0].value.value, str)):
+            if (
+                tree.body
+                and isinstance(tree.body[0], ast.Expr)
+                and isinstance(tree.body[0].value, ast.Constant)
+                and isinstance(tree.body[0].value.value, str)
+            ):
                 # There's a module docstring
                 docstring_end_line = tree.body[0].end_lineno
                 insert_pos = docstring_end_line
@@ -294,7 +309,7 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         else:
             lines.append(import_line)
 
-        result = ''.join(lines)
+        result = "".join(lines)
 
     return result
 
@@ -326,7 +341,11 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         return source
 
     # Sort by position (reverse order so we can replace from bottom to top)
-    dedent_strings = sorted(finder.dedent_strings, key=lambda node: (node.lineno, node.col_offset), reverse=True)
+    dedent_strings = sorted(
+        finder.dedent_strings,
+        key=lambda node: (node.lineno, node.col_offset),
+        reverse=True,
+    )
 
     # Convert source to list of characters for easier manipulation
     source_chars = list(source)
@@ -348,7 +367,7 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         end_pos = sum(len(line) for line in source_lines[:end_line]) + end_col_offset
 
         # Extract the original string literal (including quotes)
-        original_literal = ''.join(source_chars[start_pos:end_pos])
+        original_literal = "".join(source_chars[start_pos:end_pos])
 
         # Determine quote style
         if original_literal.startswith('"""') or original_literal.startswith("'''"):
@@ -361,11 +380,11 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
             continue  # Skip if we can't determine quote style
 
         # Check if there's a backslash after the opening quotes (line continuation)
-        has_backslash = original_literal[quote_len:quote_len+1] == '\\'
+        has_backslash = original_literal[quote_len : quote_len + 1] == "\\"
 
         # Determine the correct indentation for the content
         # Get the line where the opening quote is
-        quote_line = source_lines[start_line].rstrip('\n\r')
+        quote_line = source_lines[start_line].rstrip("\n\r")
         first_non_space = len(quote_line) - len(quote_line.lstrip())
 
         # Check if the opening quote is at the start of the line (possibly with leading whitespace)
@@ -388,9 +407,11 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
             opening = quote
 
         # Add proper indentation to the closing quote if the content ends with a newline
-        if formatted_content.endswith('\n'):
+        if formatted_content.endswith("\n"):
             # Remove the trailing newline and add closing quote at the line's indentation
-            formatted_literal = f"{opening}{formatted_content[:-1]}\n{' ' * first_non_space}{quote}"
+            formatted_literal = (
+                f"{opening}{formatted_content[:-1]}\n{' ' * first_non_space}{quote}"
+            )
         else:
             formatted_literal = f"{opening}{formatted_content}{quote}"
 
@@ -398,16 +419,20 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         source_chars[start_pos:end_pos] = list(formatted_literal)
 
     # Convert back to string
-    formatted_source = ''.join(source_chars)
+    formatted_source = "".join(source_chars)
 
     # Verify that formatting preserves semantics
     if not check_format(source, formatted_source):
-        raise RuntimeError(f"Formatting validation failed for {filename}: dedented strings don't match")
+        raise RuntimeError(
+            f"Formatting validation failed for {filename}: dedented strings don't match"
+        )
 
     return formatted_source
 
 
-def format_file(file_path: Path, in_place: bool = False, add_dedent_mode: bool = False) -> str:
+def format_file(
+    file_path: Path, in_place: bool = False, add_dedent_mode: bool = False
+) -> str:
     """
     Format dedent strings in a file.
 
@@ -424,7 +449,9 @@ def format_file(file_path: Path, in_place: bool = False, add_dedent_mode: bool =
     try:
         if add_dedent_mode:
             formatted = add_dedent(source, filename=str(file_path))
-        formatted = format_dedent_strings(formatted if add_dedent_mode else source, filename=str(file_path))
+        formatted = format_dedent_strings(
+            formatted if add_dedent_mode else source, filename=str(file_path)
+        )
     except SyntaxError as e:
         print(f"{e}", file=sys.stderr)
         sys.exit(1)
@@ -444,22 +471,21 @@ def main():
         "paths",
         type=Path,
         nargs="*",  # Changed from "+" to "*" to allow zero arguments
-        help="Python source file(s) or folder(s) to format (reads from stdin if not provided)"
+        help="Python source file(s) or folder(s) to format (reads from stdin if not provided)",
     )
     parser.add_argument(
-        "-i", "--in-place",
-        action="store_true",
-        help="Modify the file in place"
+        "-i", "--in-place", action="store_true", help="Modify the file in place"
     )
     parser.add_argument(
-        "-d", "--dry-run",
+        "-d",
+        "--dry-run",
         action="store_true",
-        help="Show what would be changed without modifying the file"
+        help="Show what would be changed without modifying the file",
     )
     parser.add_argument(
         "--add-dedent",
         action="store_true",
-        help="Add dedent() calls to multiline strings where dedent(str) == str"
+        help="Add dedent() calls to multiline strings where dedent(str) == str",
     )
 
     args = parser.parse_args()
@@ -474,7 +500,9 @@ def main():
         try:
             if args.add_dedent:
                 formatted = add_dedent(source, filename="<stdin>")
-            formatted = format_dedent_strings(formatted if args.add_dedent else source, filename="<stdin>")
+            formatted = format_dedent_strings(
+                formatted if args.add_dedent else source, filename="<stdin>"
+            )
         except SyntaxError as e:
             print(f"{e}", file=sys.stderr)
             sys.exit(1)
@@ -511,7 +539,7 @@ def main():
         formatted = format_file(
             file_path,
             in_place=args.in_place and not args.dry_run,
-            add_dedent_mode=args.add_dedent
+            add_dedent_mode=args.add_dedent,
         )
 
         if args.dry_run or not args.in_place:

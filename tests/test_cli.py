@@ -1,4 +1,5 @@
 """CLI integration tests for format-dedent."""
+
 import subprocess
 import tempfile
 from pathlib import Path
@@ -15,20 +16,22 @@ line2
 """)
 '''
 
-EXPECTED = snapshot('''from textwrap import dedent
+EXPECTED = snapshot(
+    '''from textwrap import dedent
 
 message = dedent("""
     line1
     line2
 """)
-''')
+'''
+)
 
-SYNTAX_ERROR_SOURCE = '''from textwrap import dedent
+SYNTAX_ERROR_SOURCE = """from textwrap import dedent
 
 # This has a syntax error
 def broken(:
     pass
-'''
+"""
 
 
 def run_cli(
@@ -69,7 +72,9 @@ def run_cli(
 
         # Find the format-dedent script
         # Assuming we're running from the tests directory
-        main_module = Path(__file__).parent.parent / "src" / "format_dedent" / "__main__.py"
+        main_module = (
+            Path(__file__).parent.parent / "src" / "format_dedent" / "__main__.py"
+        )
 
         # Run the CLI
         cmd = [sys.executable, str(main_module)] + args_list
@@ -141,7 +146,8 @@ class TestCLIBasics:
         run_cli(
             args_list=["file1.py", "file2.py"],
             files_dict={"file1.py": SOURCE, "file2.py": SOURCE},
-            expected_stdout=snapshot('''\
+            expected_stdout=snapshot(
+                '''\
 === file1.py ===
 from textwrap import dedent
 
@@ -158,7 +164,8 @@ message = dedent("""
     line2
 """)
 
-''')
+'''
+            ),
         )
 
     def test_directory(self):
@@ -202,7 +209,7 @@ class TestCLIErrors:
         run_cli(
             args_list=["nonexistent.py"],
             files_dict={},
-            expected_stderr=snapshot('Error: Path nonexistent.py does not exist\n'),
+            expected_stderr=snapshot("Error: Path nonexistent.py does not exist\n"),
             return_code=1,
         )
 
@@ -212,7 +219,7 @@ class TestCLIErrors:
         run_cli(
             args_list=["test.txt"],
             files_dict={},
-            expected_stderr=snapshot('Error: Path test.txt does not exist\n'),
+            expected_stderr=snapshot("Error: Path test.txt does not exist\n"),
             return_code=1,
         )
 
@@ -222,12 +229,11 @@ class TestCLIErrors:
         run_cli(
             args_list=[],
             stdin_input=SYNTAX_ERROR_SOURCE,
-            expected_stderr=snapshot('Error parsing <stdin>: invalid syntax (<stdin>, line 4)\n'),
+            expected_stderr=snapshot(
+                "Error parsing <stdin>: invalid syntax (<stdin>, line 4)\n"
+            ),
             return_code=1,
         )
-
-
-
 
 
 class TestCLIReturnCodes:
@@ -263,13 +269,15 @@ world
         run_cli(
             args_list=["--add-dedent"],
             stdin_input=input_source,
-            expected_stdout=snapshot('''\
+            expected_stdout=snapshot(
+                '''\
 from textwrap import dedent
 x = dedent("""
     hello
     world
 """)
-'''),
+'''
+            ),
         )
 
     def test_add_dedent_file(self):
@@ -284,7 +292,8 @@ y = """
     content
 """
 '''
-        expected_output = snapshot('''\
+        expected_output = snapshot(
+            '''\
 from textwrap import dedent
 x = dedent("""
     hello
@@ -295,7 +304,8 @@ y = """
     indented
     content
 """
-''')
+'''
+        )
 
         run_cli(
             args_list=["--add-dedent", "test.py"],
@@ -312,7 +322,8 @@ line2
 """
     return text
 '''
-        expected_output = snapshot('''\
+        expected_output = snapshot(
+            '''\
 from textwrap import dedent
 def func():
     text = dedent("""
@@ -320,7 +331,8 @@ def func():
         line2
     """)
     return text
-''')
+'''
+        )
 
         run_cli(
             args_list=["--add-dedent", "--in-place", "test.py"],
@@ -334,12 +346,14 @@ def func():
 content
 """
 '''
-        expected_output = snapshot('''\
+        expected_output = snapshot(
+            '''\
 from textwrap import dedent
 x = dedent("""
     content
 """)
-''')
+'''
+        )
 
         run_cli(
             args_list=["--add-dedent", "--dry-run", "test.py"],
@@ -360,7 +374,8 @@ y = """
 new string
 """
 '''
-        expected_output = snapshot('''\
+        expected_output = snapshot(
+            '''\
 from textwrap import dedent
 
 x = dedent("""
@@ -370,7 +385,8 @@ x = dedent("""
 y = dedent("""
     new string
 """)
-''')
+'''
+        )
 
         run_cli(
             args_list=["--add-dedent", "test.py"],
@@ -392,7 +408,8 @@ world
         run_cli(
             args_list=["--add-dedent", "file1.py", "file2.py"],
             files_dict={"file1.py": input_source1, "file2.py": input_source2},
-            expected_stdout=snapshot('''\
+            expected_stdout=snapshot(
+                '''\
 === file1.py ===
 from textwrap import dedent
 x = dedent("""
@@ -405,7 +422,8 @@ y = dedent("""
     world
 """)
 
-'''),
+'''
+            ),
         )
 
     def test_add_dedent_with_docstring(self):
@@ -416,14 +434,16 @@ x = """
 content
 """
 '''
-        expected_output = snapshot('''\
+        expected_output = snapshot(
+            '''\
 """Module docstring."""
 from textwrap import dedent
 
 x = dedent("""
     content
 """)
-''')
+'''
+        )
 
         run_cli(
             args_list=["--add-dedent", "test.py"],
@@ -434,4 +454,5 @@ x = dedent("""
 
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__, "-v"])
