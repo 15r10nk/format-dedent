@@ -5,7 +5,7 @@ import ast
 import sys
 import argparse
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 
 class DedentStringFinder(ast.NodeVisitor):
@@ -13,7 +13,7 @@ class DedentStringFinder(ast.NodeVisitor):
 
     def __init__(self, source_lines: List[str]):
         self.source_lines = source_lines
-        self.dedent_strings: List[Tuple[int, int, int, int, str, int]] = []
+        self.dedent_strings: List[ast.Constant] = []
 
     def visit_Call(self, node: ast.Call) -> None:
         """Visit Call nodes to find textwrap.dedent() calls."""
@@ -35,16 +35,8 @@ class DedentStringFinder(ast.NodeVisitor):
             arg = node.args[0]
             # Check if the argument is a literal string (Constant in Python 3.8+)
             if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                # Use the col_offset of the string literal as the indentation reference
-                # Store location: (lineno, col_offset, end_lineno, end_col_offset, string_value, col_offset)
-                self.dedent_strings.append((
-                    arg.lineno,
-                    arg.col_offset,
-                    arg.end_lineno,
-                    arg.end_col_offset,
-                    arg.value,
-                    arg.col_offset  # Use the column position of the opening quote
-                ))
+                # Store the AST node itself
+                self.dedent_strings.append(arg)
 
         self.generic_visit(node)
 
@@ -128,13 +120,19 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         return source
 
     # Sort by position (reverse order so we can replace from bottom to top)
-    dedent_strings = sorted(finder.dedent_strings, reverse=True)
+    dedent_strings = sorted(finder.dedent_strings, key=lambda node: (node.lineno, node.col_offset), reverse=True)
 
     # Convert source to list of characters for easier manipulation
     source_chars = list(source)
 
     # Replace each dedent string
-    for lineno, col_offset, end_lineno, end_col_offset, original_content, opening_quote_col in dedent_strings:
+    for node in dedent_strings:
+        lineno = node.lineno
+        col_offset = node.col_offset
+        end_lineno = node.end_lineno
+        end_col_offset = node.end_col_offset
+        original_content = node.value
+        opening_quote_col = node.col_offset
         # Convert to 0-based indexing
         start_line = lineno - 1
         end_line = end_lineno - 1

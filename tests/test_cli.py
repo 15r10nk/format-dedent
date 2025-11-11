@@ -141,7 +141,24 @@ class TestCLIBasics:
         run_cli(
             args_list=["file1.py", "file2.py"],
             files_dict={"file1.py": SOURCE, "file2.py": SOURCE},
-            expected_stdout=f"=== file1.py ===\n{EXPECTED}\n=== file2.py ===\n{EXPECTED}\n",
+            expected_stdout=snapshot('''\
+=== file1.py ===
+from textwrap import dedent
+
+message = dedent("""
+    line1
+    line2
+""")
+
+=== file2.py ===
+from textwrap import dedent
+
+message = dedent("""
+    line1
+    line2
+""")
+
+''')
         )
     
     def test_directory(self):
