@@ -795,16 +795,17 @@ func("\\n")
 
     def test_preserves_escape_sequences_in_content(self):
         """Multiline strings containing escape sequences should preserve them."""
-        # This tests the case where a string contains code with escape sequences
+        # This tests the case where a dedent string contains code with escape sequences
         # like \\n that should not be converted to actual newlines
         source = '''\
 from textwrap import dedent
 
 def test():
-    x = """
-test = "\\n"
-another = "hello\\nworld"
+    x = dedent("""
+test = "\\\\n"
+another = "hello\\\\nworld"
 """
+)
     return x
 '''
         result = format_dedent_strings(source)
@@ -813,10 +814,11 @@ another = "hello\\nworld"
 from textwrap import dedent
 
 def test():
-    x = """
-        test = "\\n"
-        another = "hello\\nworld"
+    x = dedent("""
+        test = "\\\\n"
+        another = "hello\\\\nworld"
     """
+)
     return x
 '''
         )

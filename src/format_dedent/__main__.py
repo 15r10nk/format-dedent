@@ -372,7 +372,6 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         col_offset = node.col_offset
         end_lineno = node.end_lineno
         end_col_offset = node.end_col_offset
-        original_content = node.value
         opening_quote_col = node.col_offset
         # Convert to 0-based indexing
         start_line = lineno - 1
@@ -398,6 +397,8 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         # Check if there's a backslash after the opening quotes (line continuation)
         has_backslash = original_literal[quote_len : quote_len + 1] == "\\"
 
+        original_content = str(node.value)
+
         # Determine the correct indentation for the content
         # Get the line where the opening quote is
         quote_line = source_lines[start_line].rstrip("\n\r")
@@ -414,6 +415,20 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         # Format the content with proper indentation
         formatted_content = format_string_content(original_content, content_indent)
 
+        # Escape the formatted content for the target quote style
+        # We need to escape backslashes and the quote character being used
+        escaped_content = formatted_content.replace("\\", "\\\\")  # Escape backslashes first
+        if quote == '"""':
+            # In triple double quotes, escape any """ sequences
+            escaped_content = escaped_content.replace('"""', r'\"\"\"')
+        elif quote == "'''":
+            # In triple single quotes, escape any ''' sequences  
+            escaped_content = escaped_content.replace("'''", r"\'\'\'")
+        elif quote == '"':
+            escaped_content = escaped_content.replace('"', '\\"')
+        elif quote == "'":
+            escaped_content = escaped_content.replace("'", "\\'")
+
         # Reconstruct the string literal
         # If there was a backslash after the opening quote, we need to add newline after it
         if has_backslash:
@@ -423,13 +438,13 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
             opening = quote
 
         # Add proper indentation to the closing quote if the content ends with a newline
-        if formatted_content.endswith("\n"):
+        if escaped_content.endswith("\n"):
             # Remove the trailing newline and add closing quote at the line's indentation
             formatted_literal = (
-                f"{opening}{formatted_content[:-1]}\n{' ' * first_non_space}{quote}"
+                f"{opening}{escaped_content[:-1]}\n{' ' * first_non_space}{quote}"
             )
         else:
-            formatted_literal = f"{opening}{formatted_content}{quote}"
+            formatted_literal = f"{opening}{escaped_content}{quote}"
 
         # Replace in source
         source_chars[start_pos:end_pos] = list(formatted_literal)
