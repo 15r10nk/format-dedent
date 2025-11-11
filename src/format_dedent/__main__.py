@@ -149,6 +149,7 @@ class MultilineStringFinder(ast.NodeVisitor):
     def __init__(self):
         self.multiline_strings: List[ast.Constant] = []
         self.dedent_string_ids: set = set()
+        self.in_fstring = False
 
     def visit_Call(self, node: ast.Call) -> None:
         """Track strings inside dedent() calls to skip them."""
@@ -173,8 +174,21 @@ class MultilineStringFinder(ast.NodeVisitor):
 
         self.generic_visit(node)
 
+    def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
+        """Visit f-strings and skip them (can't wrap f-strings with dedent)."""
+        # Set flag to skip any string constants inside f-strings
+        old_in_fstring = self.in_fstring
+        self.in_fstring = True
+        self.generic_visit(node)
+        self.in_fstring = old_in_fstring
+
     def visit_Constant(self, node: ast.Constant) -> None:
         """Visit string constants to find multiline strings not in dedent()."""
+        # Skip if we're inside an f-string
+        if self.in_fstring:
+            self.generic_visit(node)
+            return
+
         # Check if the string literal spans multiple lines in the source code
         # (not just if the string value contains newlines)
         if isinstance(node.value, str) and node.lineno != node.end_lineno:

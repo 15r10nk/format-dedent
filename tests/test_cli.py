@@ -1,5 +1,7 @@
 """CLI integration tests for format-dedent."""
 
+from textwrap import dedent
+
 import subprocess
 import tempfile
 from pathlib import Path
@@ -8,30 +10,36 @@ import sys
 from inline_snapshot import snapshot
 
 # Common test strings used across multiple tests
-SOURCE = '''from textwrap import dedent
+SOURCE = dedent(
+    '''    from textwrap import dedent
 
-message = dedent("""
-line1
-line2
-""")
-'''
-
-EXPECTED = snapshot(
-    '''from textwrap import dedent
-
-message = dedent("""
+    message = dedent("""
     line1
     line2
-""")
+    """)
 '''
 )
 
-SYNTAX_ERROR_SOURCE = """from textwrap import dedent
+EXPECTED = snapshot(
+    dedent(
+        '''        from textwrap import dedent
 
-# This has a syntax error
-def broken(:
-    pass
+        message = dedent("""
+            line1
+            line2
+        """)
+    '''
+    )
+)
+
+SYNTAX_ERROR_SOURCE = dedent(
+    """    from textwrap import dedent
+
+    # This has a syntax error
+    def broken(:
+        pass
 """
+)
 
 
 def run_cli(
@@ -147,24 +155,26 @@ class TestCLIBasics:
             args_list=["file1.py", "file2.py"],
             files_dict={"file1.py": SOURCE, "file2.py": SOURCE},
             expected_stdout=snapshot(
-                '''\
-=== file1.py ===
-from textwrap import dedent
+                dedent(
+                    '''\
+                    === file1.py ===
+                    from textwrap import dedent
 
-message = dedent("""
-    line1
-    line2
-""")
+                    message = dedent("""
+                        line1
+                        line2
+                    """)
 
-=== file2.py ===
-from textwrap import dedent
+                    === file2.py ===
+                    from textwrap import dedent
 
-message = dedent("""
-    line1
-    line2
-""")
+                    message = dedent("""
+                        line1
+                        line2
+                    """)
 
-'''
+                '''
+                )
             ),
         )
 
@@ -261,50 +271,58 @@ class TestAddDedentCLI:
 
     def test_add_dedent_stdin(self):
         """Test --add-dedent with stdin input."""
-        input_source = '''x = """
-hello
-world
-"""
-'''
+        input_source = dedent(
+            '''            x = """
+            hello
+            world
+            """
+        '''
+        )
         run_cli(
             args_list=["--add-dedent"],
             stdin_input=input_source,
             expected_stdout=snapshot(
-                '''\
-from textwrap import dedent
-x = dedent("""
-    hello
-    world
-""")
-'''
+                dedent(
+                    '''\
+                    from textwrap import dedent
+                    x = dedent("""
+                        hello
+                        world
+                    """)
+                '''
+                )
             ),
         )
 
     def test_add_dedent_file(self):
         """Test --add-dedent with a file."""
-        input_source = '''x = """
-hello
-world
-"""
+        input_source = dedent(
+            '''            x = """
+            hello
+            world
+            """
 
-y = """
-    indented
-    content
-"""
-'''
+            y = """
+                indented
+                content
+            """
+        '''
+        )
         expected_output = snapshot(
-            '''\
-from textwrap import dedent
-x = dedent("""
-    hello
-    world
-""")
+            dedent(
+                '''\
+                from textwrap import dedent
+                x = dedent("""
+                    hello
+                    world
+                """)
 
-y = """
-    indented
-    content
-"""
-'''
+                y = """
+                    indented
+                    content
+                """
+            '''
+            )
         )
 
         run_cli(
@@ -315,23 +333,27 @@ y = """
 
     def test_add_dedent_in_place(self):
         """Test --add-dedent with --in-place."""
-        input_source = '''def func():
-    text = """
-line1
-line2
-"""
-    return text
-'''
+        input_source = dedent(
+            '''            def func():
+                text = """
+            line1
+            line2
+            """
+                return text
+        '''
+        )
         expected_output = snapshot(
-            '''\
-from textwrap import dedent
-def func():
-    text = dedent("""
-        line1
-        line2
-    """)
-    return text
-'''
+            dedent(
+                '''\
+                from textwrap import dedent
+                def func():
+                    text = dedent("""
+                        line1
+                        line2
+                    """)
+                    return text
+            '''
+            )
         )
 
         run_cli(
@@ -342,17 +364,21 @@ def func():
 
     def test_add_dedent_dry_run(self):
         """Test --add-dedent with --dry-run (doesn't modify file)."""
-        input_source = '''x = """
-content
-"""
-'''
+        input_source = dedent(
+            '''            x = """
+            content
+            """
+        '''
+        )
         expected_output = snapshot(
-            '''\
-from textwrap import dedent
-x = dedent("""
-    content
-""")
-'''
+            dedent(
+                '''\
+                from textwrap import dedent
+                x = dedent("""
+                    content
+                """)
+            '''
+            )
         )
 
         run_cli(
@@ -364,28 +390,32 @@ x = dedent("""
 
     def test_add_dedent_preserves_existing_dedent(self):
         """Test that --add-dedent doesn't double-wrap existing dedent calls."""
-        input_source = '''from textwrap import dedent
+        input_source = dedent(
+            '''            from textwrap import dedent
 
-x = dedent("""
-already wrapped
-""")
+            x = dedent("""
+            already wrapped
+            """)
 
-y = """
-new string
-"""
-'''
+            y = """
+            new string
+            """
+        '''
+        )
         expected_output = snapshot(
-            '''\
-from textwrap import dedent
+            dedent(
+                '''\
+                from textwrap import dedent
 
-x = dedent("""
-    already wrapped
-""")
+                x = dedent("""
+                    already wrapped
+                """)
 
-y = dedent("""
-    new string
-""")
-'''
+                y = dedent("""
+                    new string
+                """)
+            '''
+            )
         )
 
         run_cli(
@@ -396,53 +426,63 @@ y = dedent("""
 
     def test_add_dedent_multiple_files(self):
         """Test --add-dedent with multiple files."""
-        input_source1 = '''x = """
-hello
-"""
-'''
-        input_source2 = '''y = """
-world
-"""
-'''
+        input_source1 = dedent(
+            '''            x = """
+            hello
+            """
+        '''
+        )
+        input_source2 = dedent(
+            '''            y = """
+            world
+            """
+        '''
+        )
 
         run_cli(
             args_list=["--add-dedent", "file1.py", "file2.py"],
             files_dict={"file1.py": input_source1, "file2.py": input_source2},
             expected_stdout=snapshot(
-                '''\
-=== file1.py ===
-from textwrap import dedent
-x = dedent("""
-    hello
-""")
+                dedent(
+                    '''\
+                    === file1.py ===
+                    from textwrap import dedent
+                    x = dedent("""
+                        hello
+                    """)
 
-=== file2.py ===
-from textwrap import dedent
-y = dedent("""
-    world
-""")
+                    === file2.py ===
+                    from textwrap import dedent
+                    y = dedent("""
+                        world
+                    """)
 
-'''
+                '''
+                )
             ),
         )
 
     def test_add_dedent_with_docstring(self):
         """Test --add-dedent with module docstring."""
-        input_source = '''"""Module docstring."""
+        input_source = dedent(
+            '''            """Module docstring."""
 
-x = """
-content
-"""
-'''
+            x = """
+            content
+            """
+        '''
+        )
         expected_output = snapshot(
-            '''\
-"""Module docstring."""
-from textwrap import dedent
+            dedent(
+                '''\
+                """Module docstring."""
+                from textwrap import dedent
 
-x = dedent("""
-    content
-""")
-'''
+                x = dedent("""
+                    content
+                """)
+            '''
+            )
         )
 
         run_cli(
