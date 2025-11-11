@@ -1,0 +1,37 @@
+# Example .pre-commit-config.yaml for using format-dedent in your project
+#
+# To use this:
+# 1. Copy this file to your project root as .pre-commit-config.yaml
+# 2. Update the repo URL to point to the actual format-dedent repository
+# 3. Run: pre-commit install
+# 4. The hook will now run automatically on git commit
+
+repos:
+  # Format dedent strings in Python files
+  - repo: https://github.com/yourusername/format-dedent
+    rev: v0.1.0  # Use a specific version tag
+    hooks:
+      - id: format-dedent
+        # Optional: customize arguments
+        # args: [--in-place]  # This is already the default
+
+  # You can combine with other pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # Optional: Add Black for general Python formatting
+  # - repo: https://github.com/psf/black
+  #   rev: 23.12.1
+  #   hooks:
+  #     - id: black
+
+  # Optional: Add isort for import sorting
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.13.2
+  #   hooks:
+  #     - id: isort

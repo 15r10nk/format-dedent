@@ -1,0 +1,24 @@
+# Pre-commit configuration for format-dedent repository
+repos:
+  # Use the local format-dedent tool on this repository
+  - repo: local
+    hooks:
+      - id: format-dedent
+        name: Format dedent strings
+        entry: format-dedent
+        language: python
+        types: [python]
+        args: [--in-place]
+        additional_dependencies: []
+
+  # Standard pre-commit hooks for general code quality
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: debug-statements

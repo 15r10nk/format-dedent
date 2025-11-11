@@ -1,0 +1,7 @@
+- id: format-dedent
+  name: Format dedent strings
+  description: Format only the literal string arguments of textwrap.dedent() calls
+  entry: format-dedent
+  language: python
+  types: [python]
+  args: [--in-place]
