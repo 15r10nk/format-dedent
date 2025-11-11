@@ -4,15 +4,14 @@ import ast
 from typing import List
 
 
-class DedentStringFinder(ast.NodeVisitor):
+def find_dedent_strings(tree: ast.AST) -> List[ast.Constant]:
     """Find textwrap.dedent() calls with literal string arguments."""
+    dedent_strings = []
 
-    def __init__(self, source_lines: List[str]):
-        self.source_lines = source_lines
-        self.dedent_strings: List[ast.Constant] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
 
-    def visit_Call(self, node: ast.Call) -> None:
-        """Visit Call nodes to find textwrap.dedent() calls."""
         # Check if this is a call to textwrap.dedent or just dedent
         is_dedent = False
 
@@ -33,10 +32,9 @@ class DedentStringFinder(ast.NodeVisitor):
             arg = node.args[0]
             # Check if the argument is a literal string (Constant in Python 3.8+)
             if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                # Store the AST node itself
-                self.dedent_strings.append(arg)
+                dedent_strings.append(arg)
 
-        self.generic_visit(node)
+    return dedent_strings
 
 
 def add_parent_info(tree: ast.AST) -> None:

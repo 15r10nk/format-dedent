@@ -4,7 +4,7 @@ import ast
 import textwrap
 from typing import List
 
-from .ast_helpers import DedentStringFinder
+from .ast_helpers import find_dedent_strings
 
 
 def format_string_content(content: str, indent_level: int = 0) -> str:
@@ -80,20 +80,15 @@ def check_format(original_code: str, formatted_code: str) -> bool:
         return False
 
     # Find dedent strings in both
-    original_finder = DedentStringFinder(original_code.splitlines(keepends=True))
-    formatted_finder = DedentStringFinder(formatted_code.splitlines(keepends=True))
-
-    original_finder.visit(original_tree)
-    formatted_finder.visit(formatted_tree)
+    original_strings = find_dedent_strings(original_tree)
+    formatted_strings = find_dedent_strings(formatted_tree)
 
     # Should have the same number of dedent calls
-    if len(original_finder.dedent_strings) != len(formatted_finder.dedent_strings):
+    if len(original_strings) != len(formatted_strings):
         return False
 
     # Compare each pair of dedent strings
-    for orig_node, fmt_node in zip(
-        original_finder.dedent_strings, formatted_finder.dedent_strings
-    ):
+    for orig_node, fmt_node in zip(original_strings, formatted_strings):
         orig_dedented = textwrap.dedent(orig_node.value)
         fmt_dedented = textwrap.dedent(fmt_node.value)
 
@@ -123,15 +118,14 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         raise SyntaxError(f"Error parsing {filename}: {e}") from e
 
     # Find dedent strings
-    finder = DedentStringFinder(source_lines)
-    finder.visit(tree)
+    dedent_strings_list = find_dedent_strings(tree)
 
-    if not finder.dedent_strings:
+    if not dedent_strings_list:
         return source
 
     # Sort by position (reverse order so we can replace from bottom to top)
     dedent_strings = sorted(
-        finder.dedent_strings,
+        dedent_strings_list,
         key=lambda node: (node.lineno, node.col_offset),
         reverse=True,
     )
