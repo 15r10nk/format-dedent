@@ -8,7 +8,7 @@ repos:
         entry: env PYTHONPATH=src python3 -m format_dedent
         language: system
         types: [python]
-        args: [--write]
+        args: [--write,--add-dedent]
 
   # Black - Python code formatter
   - repo: https://github.com/psf/black

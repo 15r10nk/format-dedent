@@ -273,12 +273,14 @@ class TestAddDedentCLI:
             args_list=["--add-dedent"],
             stdin_input=input_source,
             expected_stdout=snapshot(
-                '''\
-x = """
-hello
-world
-"""
-'''
+                dedent(
+                    '''\
+                    x = """
+                    hello
+                    world
+                    """
+                    '''
+                )
             ),
         )
 
@@ -297,17 +299,19 @@ world
             '''
         )
         expected_output = snapshot(
-            '''\
-x = """
-hello
-world
-"""
+            dedent(
+                '''\
+                x = """
+                hello
+                world
+                """
 
-y = """
-    indented
-    content
-"""
-'''
+                y = """
+                    indented
+                    content
+                """
+                '''
+            )
         )
 
         run_cli(
@@ -362,17 +366,19 @@ y = """
             '''
         )
         expected_output = snapshot(
-            '''\
-from textwrap import dedent
+            dedent(
+                '''\
+                from textwrap import dedent
 
-x = dedent("""
-    already wrapped
-""")
+                x = dedent("""
+                    already wrapped
+                """)
 
-y = """
-new string
-"""
-'''
+                y = """
+                new string
+                """
+                '''
+            )
         )
 
         run_cli(
@@ -400,18 +406,20 @@ new string
             args_list=["--add-dedent", "file1.py", "file2.py"],
             files_dict={"file1.py": input_source1, "file2.py": input_source2},
             expected_stdout=snapshot(
-                '''\
-=== file1.py ===
-x = """
-hello
-"""
+                dedent(
+                    '''\
+                    === file1.py ===
+                    x = """
+                    hello
+                    """
 
-=== file2.py ===
-y = """
-world
-"""
+                    === file2.py ===
+                    y = """
+                    world
+                    """
 
-'''
+                    '''
+                )
             ),
         )
 
@@ -426,13 +434,15 @@ world
             '''
         )
         expected_output = snapshot(
-            '''\
-"""Module docstring."""
+            dedent(
+                '''\
+                """Module docstring."""
 
-x = """
-content
-"""
-'''
+                x = """
+                content
+                """
+                '''
+            )
         )
 
         run_cli(
