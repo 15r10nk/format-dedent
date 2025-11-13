@@ -3,6 +3,13 @@
 **Format multiline strings with proper indentation** — A Python code formatter that formats **only** the literal string arguments of `textwrap.dedent()` calls.
 
 ## ✨ What does it do?
+![ci](https://github.com/15r10nk/format-dedent/actions/workflows/ci.yml/badge.svg?branch=main)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-green)](https://15r10nk.github.io/format-dedent/)
+[![pypi version](https://img.shields.io/pypi/v/format-dedent.svg)](https://pypi.org/project/format-dedent/)
+![Python Versions](https://img.shields.io/pypi/pyversions/format-dedent)
+![PyPI - Downloads](https://img.shields.io/pypi/dw/format-dedent)
+[![coverage](https://img.shields.io/badge/coverage-100%25-blue)](https://15r10nk.github.io/format-dedent/contributing/#coverage)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/15r10nk)](https://github.com/sponsors/15r10nk)
 
 `format-dedent` automatically formats multiline strings inside `textwrap.dedent()` calls to make them visually match their runtime output. This makes your code more readable while preserving the exact behavior.
 
