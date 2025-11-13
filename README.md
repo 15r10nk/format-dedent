@@ -102,7 +102,6 @@ repos:
 
 **Before formatting:**
 
-<!-- test: format-input -->
 ```python
 import textwrap
 
@@ -119,7 +118,7 @@ Inconsistent indentation inside the string makes it hard to read and understand 
 
 **After formatting:**
 
-<!-- test: format-output -->
+<!-- test: output -->
 ```python
 import textwrap
 
@@ -138,7 +137,6 @@ def get_sql_query():
 
 **Before:**
 
-<!-- test: add-dedent-input -->
 ```python
 def get_message():
     message = """
@@ -173,7 +171,6 @@ def get_message():
 
 **Before:**
 
-<!-- test: format-input -->
 ```python
 from textwrap import dedent
 
@@ -188,7 +185,7 @@ def render_html():
 
 **After:**
 
-<!-- test: format-output -->
+<!-- test: output -->
 ```python
 from textwrap import dedent
 
