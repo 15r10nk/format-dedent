@@ -22,11 +22,10 @@ classifiers = [
 [project.scripts]
 format-dedent = "format_dedent.cli:main"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest>=7.0",
-    "inline-snapshot[black]>=0.13.0",
-    "pre-commit>=3.0.0",
+    "inline-snapshot[black]>=0.31.1",
+    "pytest>=8.3.5",
 ]
 
 [build-system]
