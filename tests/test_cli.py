@@ -10,36 +10,28 @@ import sys
 from inline_snapshot import snapshot
 
 # Common test strings used across multiple tests
-SOURCE = dedent(
-    '''    from textwrap import dedent
+SOURCE = dedent('''    from textwrap import dedent
 
     message = dedent("""
     line1
     line2
     """)
-    '''
-)
+    ''')
 
-EXPECTED = snapshot(
-    dedent(
-        '''        from textwrap import dedent
+EXPECTED = snapshot(dedent('''        from textwrap import dedent
 
         message = dedent("""
             line1
             line2
         """)
-        '''
-    )
-)
+        '''))
 
-SYNTAX_ERROR_SOURCE = dedent(
-    """    from textwrap import dedent
+SYNTAX_ERROR_SOURCE = dedent("""    from textwrap import dedent
 
     # This has a syntax error
     def broken(:
         pass
-    """
-)
+    """)
 
 
 def run_cli(
@@ -154,9 +146,7 @@ class TestCLIBasics:
         run_cli(
             args_list=["file1.py", "file2.py"],
             files_dict={"file1.py": SOURCE, "file2.py": SOURCE},
-            expected_stdout=snapshot(
-                dedent(
-                    '''\
+            expected_stdout=snapshot(dedent('''\
                     === file1.py ===
                     from textwrap import dedent
 
@@ -173,9 +163,7 @@ class TestCLIBasics:
                         line2
                     """)
 
-                    '''
-                )
-            ),
+                    ''')),
         )
 
     def test_directory(self):
@@ -262,32 +250,25 @@ class TestAddDedentCLI:
 
     def test_add_dedent_stdin(self):
         """Test --add-dedent with stdin input."""
-        input_source = dedent(
-            '''            x = """
+        input_source = dedent('''            x = """
             hello
             world
             """
-            '''
-        )
+            ''')
         run_cli(
             args_list=["--add-dedent"],
             stdin_input=input_source,
-            expected_stdout=snapshot(
-                dedent(
-                    '''\
+            expected_stdout=snapshot(dedent('''\
                     x = """
                     hello
                     world
                     """
-                    '''
-                )
-            ),
+                    ''')),
         )
 
     def test_add_dedent_file(self):
         """Test --add-dedent with a file."""
-        input_source = dedent(
-            '''            x = """
+        input_source = dedent('''            x = """
             hello
             world
             """
@@ -296,11 +277,8 @@ class TestAddDedentCLI:
                 indented
                 content
             """
-            '''
-        )
-        expected_output = snapshot(
-            dedent(
-                '''\
+            ''')
+        expected_output = snapshot(dedent('''\
                 x = """
                 hello
                 world
@@ -310,9 +288,7 @@ class TestAddDedentCLI:
                     indented
                     content
                 """
-                '''
-            )
-        )
+                '''))
 
         run_cli(
             args_list=["--add-dedent", "test.py"],
@@ -322,18 +298,14 @@ class TestAddDedentCLI:
 
     def test_add_dedent_in_place(self):
         """Test --add-dedent with --write."""
-        input_source = dedent(
-            '''            def func():
+        input_source = dedent('''            def func():
                 text = """
             line1
             line2
             """
                 return text
-            '''
-        )
-        expected_output = snapshot(
-            dedent(
-                '''\
+            ''')
+        expected_output = snapshot(dedent('''\
                 from textwrap import dedent
                 def func():
                     text = dedent("""
@@ -341,9 +313,7 @@ class TestAddDedentCLI:
                         line2
                     """)
                     return text
-                '''
-            )
-        )
+                '''))
 
         run_cli(
             args_list=["--add-dedent", "--write", "test.py"],
@@ -353,8 +323,7 @@ class TestAddDedentCLI:
 
     def test_add_dedent_preserves_existing_dedent(self):
         """Test that --add-dedent doesn't double-wrap existing dedent calls."""
-        input_source = dedent(
-            '''            from textwrap import dedent
+        input_source = dedent('''            from textwrap import dedent
 
             x = dedent("""
             already wrapped
@@ -363,11 +332,8 @@ class TestAddDedentCLI:
             y = """
             new string
             """
-            '''
-        )
-        expected_output = snapshot(
-            dedent(
-                '''\
+            ''')
+        expected_output = snapshot(dedent('''\
                 from textwrap import dedent
 
                 x = dedent("""
@@ -377,9 +343,7 @@ class TestAddDedentCLI:
                 y = """
                 new string
                 """
-                '''
-            )
-        )
+                '''))
 
         run_cli(
             args_list=["--add-dedent", "test.py"],
@@ -389,25 +353,19 @@ class TestAddDedentCLI:
 
     def test_add_dedent_multiple_files(self):
         """Test --add-dedent with multiple files."""
-        input_source1 = dedent(
-            '''            x = """
+        input_source1 = dedent('''            x = """
             hello
             """
-            '''
-        )
-        input_source2 = dedent(
-            '''            y = """
+            ''')
+        input_source2 = dedent('''            y = """
             world
             """
-            '''
-        )
+            ''')
 
         run_cli(
             args_list=["--add-dedent", "file1.py", "file2.py"],
             files_dict={"file1.py": input_source1, "file2.py": input_source2},
-            expected_stdout=snapshot(
-                dedent(
-                    '''\
+            expected_stdout=snapshot(dedent('''\
                     === file1.py ===
                     x = """
                     hello
@@ -418,32 +376,24 @@ class TestAddDedentCLI:
                     world
                     """
 
-                    '''
-                )
-            ),
+                    ''')),
         )
 
     def test_add_dedent_with_docstring(self):
         """Test --add-dedent with module docstring."""
-        input_source = dedent(
-            '''            """Module docstring."""
+        input_source = dedent('''            """Module docstring."""
 
             x = """
             content
             """
-            '''
-        )
-        expected_output = snapshot(
-            dedent(
-                '''\
+            ''')
+        expected_output = snapshot(dedent('''\
                 """Module docstring."""
 
                 x = """
                 content
                 """
-                '''
-            )
-        )
+                '''))
 
         run_cli(
             args_list=["--add-dedent", "test.py"],
