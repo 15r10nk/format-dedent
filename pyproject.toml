@@ -40,6 +40,12 @@ dev = [
   "inline-snapshot[black]>=0.31.1",
   "pytest>=8.3.5",
   "scriv==1.8.0; python_version >= '3.10'",
+  "coverage[toml]==7.6.1; python_version < '3.9'",
+  "coverage[toml]==7.10.7; python_version >= '3.9' and python_version < '3.10'",
+  "coverage[toml]==7.15.4; python_version >= '3.10'",
+  "coverage-enable-subprocess==1.0",
+  "pytest-xdist==3.6.1; python_version < '3.9'",
+  "pytest-xdist==3.8.0; python_version >= '3.9'"
 ]
 
 
@@ -86,6 +92,7 @@ omit = [
   "src/format_dedent/__about__.py"
 ]
 parallel = true
+source_pkgs = ["format_dedent"]
 
 [tool.hatch.envs.default]
 scripts.test = "pytest {args:tests}"
