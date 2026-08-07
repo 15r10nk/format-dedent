@@ -48,6 +48,25 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
     if not strings_to_wrap:
         return source
 
+    dedent_callable = None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == "textwrap":
+            for alias in node.names:
+                if alias.name == "dedent":
+                    dedent_callable = alias.asname or alias.name
+                    break
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "textwrap":
+                    dedent_callable = f"{alias.asname or alias.name}.dedent"
+                    break
+        if dedent_callable is not None:
+            break
+
+    needs_dedent_import = dedent_callable is None
+    if needs_dedent_import:
+        dedent_callable = "dedent"
+
     # Sort by position (reverse order so we can replace from bottom to top)
     strings_to_wrap = sorted(
         strings_to_wrap, key=lambda n: (n.lineno, n.col_offset), reverse=True
@@ -73,32 +92,16 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         # Get the original string literal
         original_literal = "".join(source_chars[start_pos:end_pos])
 
-        # Wrap with dedent()
-        wrapped = f"dedent({original_literal})"
+        # Wrap with the dedent name provided by the existing imports
+        wrapped = f"{dedent_callable}({original_literal})"
 
         # Replace in source
         source_chars[start_pos:end_pos] = list(wrapped)
 
     result = "".join(source_chars)
 
-    # Check if textwrap import exists
-    tree = ast.parse(result, filename=filename)
-    has_textwrap_import = False
-    has_dedent_import = False
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name == "textwrap":
-                    has_textwrap_import = True
-        elif isinstance(node, ast.ImportFrom):
-            if node.module == "textwrap":
-                for alias in node.names:
-                    if alias.name == "dedent":
-                        has_dedent_import = True
-
     # Add import if needed
-    if not has_textwrap_import and not has_dedent_import:
+    if needs_dedent_import:
         # Find the right place to add the import (after any docstring, before other code)
         lines = result.splitlines(keepends=True)
         insert_pos = 0

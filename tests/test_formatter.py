@@ -998,29 +998,64 @@ class TestAddDedent:
         )
 
     def test_with_existing_textwrap_import(self):
-        """Should not add duplicate import if textwrap already imported."""
+        """Use textwrap.dedent when the textwrap module is imported."""
         source = dedent(
             '''\
             import textwrap
 
-            x = """
+            def get_message():
+                return """
             content
             """
             '''
         )
         result = add_dedent(source)
-        # Should not add "from textwrap import dedent" since textwrap is imported
         assert result == snapshot(
             dedent(
                 '''\
                 import textwrap
 
-                x = """
+                def get_message():
+                    return textwrap.dedent("""
                 content
-                """
+                """)
                 '''
             )
         )
+
+        namespace = {}
+        exec(result, namespace)
+        assert namespace["get_message"]() == "\ncontent\n"
+
+    def test_with_aliased_dedent_import(self):
+        """Use the imported alias when dedent has been renamed."""
+        source = dedent(
+            '''\
+            from textwrap import dedent as d
+
+            def get_message():
+                return """
+            content
+            """
+            '''
+        )
+        result = add_dedent(source)
+        assert result == snapshot(
+            dedent(
+                '''\
+                from textwrap import dedent as d
+
+                def get_message():
+                    return d("""
+                content
+                """)
+                '''
+            )
+        )
+
+        namespace = {}
+        exec(result, namespace)
+        assert namespace["get_message"]() == "\ncontent\n"
 
     def test_with_existing_dedent_import(self):
         """Should not add duplicate import if dedent already imported."""
