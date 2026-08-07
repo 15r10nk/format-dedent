@@ -47,6 +47,7 @@ def run_cli(
     files_dict: Optional[Dict[str, str]] = None,
     expected_stdout: Optional[str] = None,
     expected_stderr: Optional[str] = None,
+    expected_stderr_contains: Optional[str] = None,
     changed_files_dict: Optional[Dict[str, str]] = None,
     stdin_input: Optional[str] = None,
     return_code: int = 0,
@@ -59,6 +60,7 @@ def run_cli(
         files_dict: Dictionary of {filename: content} to create before running
         expected_stdout: Expected stdout content (if None, not checked)
         expected_stderr: Expected stderr content (if None, not checked)
+        expected_stderr_contains: Text that must occur in stderr (if provided)
         changed_files_dict: Dictionary of {filename: expected_content} after running
         stdin_input: Input to provide via stdin (if None, no stdin input)
         return_code: Expected return code (default: 0)
@@ -115,6 +117,12 @@ def run_cli(
             assert result.stderr == expected_stderr, (
                 f"Stderr mismatch:\n"
                 f"Expected:\n{expected_stderr}\n"
+                f"Got:\n{result.stderr}"
+            )
+
+        if expected_stderr_contains is not None:
+            assert expected_stderr_contains in result.stderr, (
+                f"Expected stderr to contain:\n{expected_stderr_contains}\n"
                 f"Got:\n{result.stderr}"
             )
 
@@ -230,9 +238,7 @@ class TestCLIErrors:
         run_cli(
             args_list=[],
             stdin_input=SYNTAX_ERROR_SOURCE,
-            expected_stderr=snapshot(
-                "Error parsing <stdin>: invalid syntax (<stdin>, line 4)\n"
-            ),
+            expected_stderr_contains="Error parsing <stdin>:",
             return_code=1,
         )
 

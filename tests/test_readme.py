@@ -145,7 +145,7 @@ def test_readme_code_examples_are_correct():
         pytest tests/test_readme.py::test_readme_code_examples_are_correct --inline-snapshot=fix
     """
     readme_path = Path(__file__).parent.parent / "README.md"
-    current_readme = readme_path.read_text()
+    current_readme = readme_path.read_text(encoding="utf-8")
 
     # Process the README to generate correct code blocks
     correct_readme = process_readme_code_blocks(current_readme)
@@ -158,7 +158,7 @@ def test_readme_code_examples_are_correct():
 def test_readme_code_blocks_are_syntactically_valid():
     """All Python code blocks in README should be syntactically valid."""
     readme_path = Path(__file__).parent.parent / "README.md"
-    content = readme_path.read_text()
+    content = readme_path.read_text(encoding="utf-8")
 
     def validate_syntax(block: CodeBlock) -> CodeBlock:
         """Validate Python syntax for each code block."""
