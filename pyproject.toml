@@ -1,39 +1,60 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
 [project]
-name = "format-dedent"
-version = "0.1.1"
+authors = [
+  {name = "Frank Hoffmann", email = "15r10nk@polarbit.de"}
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Software Development :: Quality Assurance"
+]
+dependencies = [
+]
 description = "Format only the literal string arguments of textwrap.dedent() calls"
+keywords = ["formatter", "textwrap", "dedent", "pre-commit"]
+license = "MIT"
+name = "format-dedent"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = []
-license = "MIT"
-keywords = ["formatter", "textwrap", "dedent", "pre-commit"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Quality Assurance",
+version = "0.1.1"
+
+[dependency-groups]
+cog = [
+  "cogapp>=3.4.1",
 ]
+dev = [
+  "commitizen==4.16.5; python_version >= '3.10'",
+  "inline-snapshot[black]>=0.31.1",
+  "pytest>=8.3.5",
+  "scriv==1.8.0; python_version >= '3.10'",
+]
+
+
 
 [project.scripts]
 format-dedent = "format_dedent.cli:main"
 
-[dependency-groups]
-dev = [
-    "inline-snapshot[black]>=0.31.1",
-    "pytest>=8.3.5",
-]
 
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+[project.urls]
+Documentation = "https://github.com/15r10nk/format-dedent#readme"
+Issues = "https://github.com/15r10nk/format-dedent/issues"
+Source = "https://github.com/15r10nk/format-dedent"
 
-[tool.setuptools]
-packages = {find = {where = ["src"]}}
+[tool.black]
+target-version = ["py38"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "."]
@@ -41,3 +62,73 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --tb=short"
+
+[tool.commitizen]
+major_version_zero = true
+tag_format = "v$major.$minor.$patch$prerelease"
+version_scheme = "semver2"
+version_provider = "pep621"
+
+[tool.scriv]
+format = "md"
+
+[tool.coverage.paths]
+format_dedent = ["src/format_dedent", "*/format-dedent/src/format_dedent"]
+tests = ["tests", "*/format-dedent/tests"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "assert False", "raise NotImplemented", "\\.\\.\\."]
+
+[tool.coverage.run]
+branch = true
+data_file = "$TOP/.coverage"
+omit = [
+  "src/format_dedent/__about__.py"
+]
+parallel = true
+
+[tool.hatch.envs.default]
+scripts.test = "pytest {args:tests}"
+dependencies = [
+  "pytest",
+  "pytest-xdist"
+]
+
+[tool.hatch.envs.hatch-test]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "coverage-enable-subprocess",
+  "pytest",
+  "pytest-xdist"
+]
+env-vars.TOP = "{root}"
+default-args = ["tests"]
+scripts.run = "coverage run -m pytest {args}"
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+
+
+[tool.hatch.envs.docs]
+dependencies = [
+  "mike>=2",
+  "mkdocs>=1.4.2",
+  "mkdocs-material[imaging]>=8.5.10",
+  "mkdocstrings>=0.19.0"
+]
+scripts.build = "mkdocs build {args}"
+scripts.deploy = "mike {args}"
+scripts.serve = "mkdocs serve {args}"
+
+
+[tool.hatch.envs.cov]
+dependencies = ["coverage[toml]>=6.5"]
+detached = true
+env-vars.TOP = "{root}"
+scripts.test = [
+  "- coverage erase",
+  "hatch test --cover-quiet {args}",
+  "coverage combine",
+  "coverage html",
+  "coverage report "
+]

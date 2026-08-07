@@ -105,6 +105,7 @@ repos:
 ```python
 import textwrap
 
+
 def get_sql_query():
     return textwrap.dedent("""
 SELECT users.name, orders.total
@@ -121,6 +122,7 @@ Inconsistent indentation inside the string makes it hard to read and understand 
 <!-- test: output -->
 ```python
 import textwrap
+
 
 def get_sql_query():
     return textwrap.dedent("""
@@ -174,6 +176,7 @@ def get_message():
 ```python
 from textwrap import dedent
 
+
 def render_html():
     return dedent("""
     <div class="container">
@@ -188,6 +191,7 @@ def render_html():
 <!-- test: output -->
 ```python
 from textwrap import dedent
+
 
 def render_html():
     return dedent("""

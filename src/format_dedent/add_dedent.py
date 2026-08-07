@@ -2,7 +2,6 @@
 
 import ast
 import textwrap
-from typing import List
 
 from .ast_helpers import find_multiline_strings
 
@@ -40,6 +39,7 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
     strings_to_wrap = []
     for node in multiline_strings:
         original = node.value
+        assert isinstance(original, str)
         dedented = textwrap.dedent(original)
         # Only wrap if dedenting doesn't change the string
         if original == dedented:
@@ -49,14 +49,14 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
         return source
 
     dedent_callable = None
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module == "textwrap":
-            for alias in node.names:
+    for import_node in ast.walk(tree):
+        if isinstance(import_node, ast.ImportFrom) and import_node.module == "textwrap":
+            for alias in import_node.names:
                 if alias.name == "dedent":
                     dedent_callable = alias.asname or alias.name
                     break
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
+        elif isinstance(import_node, ast.Import):
+            for alias in import_node.names:
                 if alias.name == "textwrap":
                     dedent_callable = f"{alias.asname or alias.name}.dedent"
                     break
@@ -83,6 +83,8 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
     # Wrap each string with dedent()
     for node in strings_to_wrap:
         start_line = node.lineno - 1
+        assert node.end_lineno is not None
+        assert node.end_col_offset is not None
         end_line = node.end_lineno - 1
 
         # Calculate positions using pre-calculated line positions
@@ -124,6 +126,7 @@ def add_dedent(source: str, filename: str = "<string>") -> str:
             ):
                 # There's a module docstring
                 docstring_end_line = tree.body[0].end_lineno
+                assert docstring_end_line is not None
                 insert_pos = docstring_end_line
         except (SyntaxError, AttributeError):
             pass

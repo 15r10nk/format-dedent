@@ -1,16 +1,16 @@
 """Test that code examples in README.md are valid and work correctly."""
 
-import re
 import ast
-from pathlib import Path
-from typing import Optional, Callable
+import re
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Optional
 
 import pytest
 from inline_snapshot import external_file
 
-from format_dedent.formatter import format_dedent_strings
 from format_dedent.add_dedent import add_dedent
+from format_dedent.formatter import format_dedent_strings
 
 
 @dataclass

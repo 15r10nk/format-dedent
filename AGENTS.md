@@ -196,17 +196,22 @@ Run manually: `pre-commit run --all-files`
 ```python
 # Before
 def func():
-    return dedent("""
+    return dedent(
+        """
     line1
     line2
-    """)
+    """
+    )
+
 
 # After (content gets 8 spaces - function indent + 4)
 def func():
-    return dedent("""
+    return dedent(
+        """
         line1
         line2
-    """)
+    """
+    )
 ```
 
 ### What Gets Formatted
@@ -262,6 +267,7 @@ The CLI uses absolute imports in `__main__.py` (when run as script):
 ```python
 if __name__ == "__main__":
     from format_dedent.cli import main
+
     main()
 ```
 
@@ -304,6 +310,7 @@ printf 'import textwrap\n\ndef test():\n    return textwrap.dedent("""\n    hell
 ### 2. Check AST Structure
 ```python
 import ast
+
 tree = ast.parse(source)
 print(ast.dump(tree, indent=2))
 ```
@@ -311,6 +318,7 @@ print(ast.dump(tree, indent=2))
 ### 3. Validate Formatting
 ```python
 from format_dedent.formatter import check_format
+
 assert check_format(original, formatted)  # Must be True
 ```
 

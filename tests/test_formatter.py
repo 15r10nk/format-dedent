@@ -2,13 +2,11 @@
 
 from textwrap import dedent
 
-from pathlib import Path
 import pytest
-import sys
 from inline_snapshot import snapshot
 
-from format_dedent.formatter import format_dedent_strings
 from format_dedent.add_dedent import add_dedent
+from format_dedent.formatter import format_dedent_strings
 
 
 def format_source(code: str) -> str:

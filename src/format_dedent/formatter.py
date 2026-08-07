@@ -2,7 +2,7 @@
 
 import ast
 import textwrap
-from typing import List, Tuple
+from typing import Tuple
 
 from .ast_helpers import find_dedent_strings
 
@@ -104,6 +104,8 @@ def check_format(
 
     # Compare each pair of dedent strings
     for i, (orig_node, fmt_node) in enumerate(zip(original_strings, formatted_strings)):
+        assert isinstance(orig_node.value, str)
+        assert isinstance(fmt_node.value, str)
         orig_dedented = textwrap.dedent(orig_node.value)
         fmt_dedented = textwrap.dedent(fmt_node.value)
 
@@ -188,6 +190,8 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         col_offset = node.col_offset
         end_lineno = node.end_lineno
         end_col_offset = node.end_col_offset
+        assert end_lineno is not None
+        assert end_col_offset is not None
         opening_quote_col = node.col_offset
         # Convert to 0-based indexing
         start_line = lineno - 1

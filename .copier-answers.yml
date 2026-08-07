@@ -1,0 +1,26 @@
+# Changes here will be overwritten by Copier
+_commit: v0.4.1
+_src_path: https://github.com/15r10nk/project-template
+author_email: 15r10nk@polarbit.de
+author_name: Frank Hoffmann
+discord_id: ''
+discord_invite_id: ''
+full_coverage: false
+github_user: 15r10nk
+insider_only: false
+module_name: format_dedent
+project_description: Format multiline strings inside textwrap.dedent() calls
+project_main: true
+project_name: format-dedent
+pypy_versions:
+- pypy3.11
+python_versions:
+- '3.8'
+- '3.9'
+- '3.10'
+- '3.11'
+- '3.12'
+- '3.13'
+- '3.14'
+show_project_logo: false
+use_mkdocs: true

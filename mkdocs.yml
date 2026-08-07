@@ -1,0 +1,8 @@
+site_name: format-dedent
+site_url: https://15r10nk.github.io/format-dedent/
+repo_url: https://github.com/15r10nk/format-dedent
+theme:
+  name: material
+nav:
+- Home: index.md
+- Contributing: contributing.md

@@ -1,12 +1,12 @@
 """CLI integration tests for format-dedent."""
 
-from textwrap import dedent
-
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
+from textwrap import dedent
 from typing import Dict, List, Optional
-import sys
+
 from inline_snapshot import snapshot
 
 # Common test strings used across multiple tests

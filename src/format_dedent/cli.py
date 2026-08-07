@@ -1,11 +1,11 @@
 """CLI for format-dedent."""
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
-from .formatter import format_dedent_strings
 from .add_dedent import add_dedent
+from .formatter import format_dedent_strings
 
 
 def format_file(
