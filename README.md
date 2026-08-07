@@ -4,7 +4,6 @@
 
 ## ✨ What does it do?
 ![ci](https://github.com/15r10nk/format-dedent/actions/workflows/ci.yml/badge.svg?branch=main)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-green)](https://15r10nk.github.io/format-dedent/)
 [![pypi version](https://img.shields.io/pypi/v/format-dedent.svg)](https://pypi.org/project/format-dedent/)
 ![Python Versions](https://img.shields.io/pypi/pyversions/format-dedent)
 ![PyPI - Downloads](https://img.shields.io/pypi/dw/format-dedent)
