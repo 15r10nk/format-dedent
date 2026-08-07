@@ -8,21 +8,21 @@
 
 repos:
   # Format dedent strings in Python files
-  - repo: https://github.com/yourusername/format-dedent
-    rev: v0.1.0  # Use a specific version tag
-    hooks:
-      - id: format-dedent
+- repo: https://github.com/yourusername/format-dedent
+  rev: v0.1.0    # Use a specific version tag
+  hooks:
+  - id: format-dedent
         # Optional: customize arguments
         # args: [--in-place]  # This is already the default
 
   # You can combine with other pre-commit hooks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+  - id: check-added-large-files
 
   # Optional: Add Black for general Python formatting
   # - repo: https://github.com/psf/black

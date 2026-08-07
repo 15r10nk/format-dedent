@@ -4,7 +4,6 @@
 
 ## ✨ What does it do?
 ![ci](https://github.com/15r10nk/format-dedent/actions/workflows/ci.yml/badge.svg?branch=main)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-green)](https://15r10nk.github.io/format-dedent/)
 [![pypi version](https://img.shields.io/pypi/v/format-dedent.svg)](https://pypi.org/project/format-dedent/)
 ![Python Versions](https://img.shields.io/pypi/pyversions/format-dedent)
 ![PyPI - Downloads](https://img.shields.io/pypi/dw/format-dedent)
@@ -102,9 +101,9 @@ repos:
 
 **Before formatting:**
 
-<!-- test: format-input -->
 ```python
 import textwrap
+
 
 def get_sql_query():
     return textwrap.dedent("""
@@ -119,9 +118,10 @@ Inconsistent indentation inside the string makes it hard to read and understand 
 
 **After formatting:**
 
-<!-- test: format-output -->
+<!-- test: output -->
 ```python
 import textwrap
+
 
 def get_sql_query():
     return textwrap.dedent("""
@@ -138,7 +138,6 @@ def get_sql_query():
 
 **Before:**
 
-<!-- test: add-dedent-input -->
 ```python
 def get_message():
     message = """
@@ -173,9 +172,9 @@ def get_message():
 
 **Before:**
 
-<!-- test: format-input -->
 ```python
 from textwrap import dedent
+
 
 def render_html():
     return dedent("""
@@ -188,9 +187,10 @@ def render_html():
 
 **After:**
 
-<!-- test: format-output -->
+<!-- test: output -->
 ```python
 from textwrap import dedent
+
 
 def render_html():
     return dedent("""

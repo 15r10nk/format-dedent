@@ -2,13 +2,11 @@
 
 from textwrap import dedent
 
-from pathlib import Path
 import pytest
-import sys
 from inline_snapshot import snapshot
 
-from format_dedent.formatter import format_dedent_strings
 from format_dedent.add_dedent import add_dedent
+from format_dedent.formatter import format_dedent_strings
 
 
 def format_source(code: str) -> str:
@@ -998,29 +996,64 @@ class TestAddDedent:
         )
 
     def test_with_existing_textwrap_import(self):
-        """Should not add duplicate import if textwrap already imported."""
+        """Use textwrap.dedent when the textwrap module is imported."""
         source = dedent(
             '''\
             import textwrap
 
-            x = """
+            def get_message():
+                return """
             content
             """
             '''
         )
         result = add_dedent(source)
-        # Should not add "from textwrap import dedent" since textwrap is imported
         assert result == snapshot(
             dedent(
                 '''\
                 import textwrap
 
-                x = """
+                def get_message():
+                    return textwrap.dedent("""
                 content
-                """
+                """)
                 '''
             )
         )
+
+        namespace = {}
+        exec(result, namespace)
+        assert namespace["get_message"]() == "\ncontent\n"
+
+    def test_with_aliased_dedent_import(self):
+        """Use the imported alias when dedent has been renamed."""
+        source = dedent(
+            '''\
+            from textwrap import dedent as d
+
+            def get_message():
+                return """
+            content
+            """
+            '''
+        )
+        result = add_dedent(source)
+        assert result == snapshot(
+            dedent(
+                '''\
+                from textwrap import dedent as d
+
+                def get_message():
+                    return d("""
+                content
+                """)
+                '''
+            )
+        )
+
+        namespace = {}
+        exec(result, namespace)
+        assert namespace["get_message"]() == "\ncontent\n"
 
     def test_with_existing_dedent_import(self):
         """Should not add duplicate import if dedent already imported."""
@@ -1091,6 +1124,118 @@ class TestAddDedent:
                 SIMPLE = """
                 no indent
                 """
+                '''
+            )
+        )
+
+
+class TestSpecialCharacters:
+    """Test that special characters like \\r, \\f, \\v, etc. are preserved."""
+
+    def test_carriage_return_preservation(self):
+        """Carriage return (\\r) should be preserved in formatted strings."""
+        source = dedent(
+            '''\
+            from textwrap import dedent
+
+            text = dedent("""
+            Line 1\\r
+            Line 2\\r\\n
+            Line 3
+            """)
+            '''
+        )
+        result = format_source(source)
+        assert result == snapshot(
+            dedent(
+                '''\
+                from textwrap import dedent
+
+                text = dedent("""
+                    Line 1\\r
+                    Line 2\\r
+
+                    Line 3
+                """)
+                '''
+            )
+        )
+
+        # Verify semantic equivalence
+        import ast
+
+        original_tree = ast.parse(source)
+        formatted_tree = ast.parse(result)
+        from format_dedent.ast_helpers import find_dedent_strings
+
+        orig_strings = find_dedent_strings(original_tree)
+        fmt_strings = find_dedent_strings(formatted_tree)
+        assert len(orig_strings) == len(fmt_strings) == 1
+
+        # The actual string values should be identical after dedent
+        from textwrap import dedent as real_dedent
+
+        assert real_dedent(orig_strings[0].value) == real_dedent(fmt_strings[0].value)
+
+    def test_form_feed_and_special_chars(self):
+        """Form feed (\\f), vertical tab (\\v), bell (\\a) should be preserved."""
+        source = dedent(
+            '''\
+            from textwrap import dedent
+
+            special = dedent("""
+            Form feed: \\f
+            Vertical tab: \\v
+            Bell: \\a
+            """)
+            '''
+        )
+        result = format_source(source)
+        assert result == snapshot(
+            dedent(
+                '''\
+                from textwrap import dedent
+
+                special = dedent("""
+                    Form feed: \\f
+                    Vertical tab: \\v
+                    Bell: \\a
+                """)
+                '''
+            )
+        )
+
+    def test_mixed_line_endings(self):
+        """Mixed line endings (\\r, \\n, \\r\\n) should be preserved."""
+        source = dedent(
+            '''\
+            from textwrap import dedent
+
+            def func():
+                text = dedent("""
+                Unix: line 1
+                Mac classic: line 2\\r
+                Windows: line 3\\r\\n
+                Mixed: line 4
+                """)
+                return text
+            '''
+        )
+        result = format_source(source)
+        assert result == snapshot(
+            dedent(
+                '''\
+                from textwrap import dedent
+
+                def func():
+                    text = dedent("""
+                        Unix: line 1
+                        Mac classic: line 2\\r
+                        Windows: line 3\\r
+
+                        Mixed: line 4
+                    """)
+                    return text
                 '''
             )
         )

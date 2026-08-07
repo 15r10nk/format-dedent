@@ -2,7 +2,7 @@
 
 import ast
 import textwrap
-from typing import List
+from typing import Tuple
 
 from .ast_helpers import find_dedent_strings
 
@@ -22,10 +22,14 @@ def format_string_content(content: str, indent_level: int = 0) -> str:
     # First dedent to get the "real" content without any indentation
     dedented = textwrap.dedent(content)
 
-    # Remove leading/trailing empty lines
-    lines = dedented.split("\n")
+    # Split lines while preserving the exact line endings (including \r\n, \r, etc.)
+    lines = dedented.splitlines(keepends=True)
 
-    # Find first and last non-empty lines
+    # Handle edge case of empty string or string without newlines
+    if not lines:
+        return dedented
+
+    # Find first and last non-empty lines (checking stripped content)
     first_non_empty = 0
     last_non_empty = len(lines) - 1
 
@@ -45,19 +49,25 @@ def format_string_content(content: str, indent_level: int = 0) -> str:
 
     for i, line in enumerate(lines):
         if i < first_non_empty or i > last_non_empty:
-            # Keep empty lines at start/end empty
-            result_lines.append("")
+            # Keep empty lines at start/end as-is (preserving line endings)
+            result_lines.append(line)
         elif line.strip():
-            # Non-empty line: add indentation (preserve trailing whitespace)
-            result_lines.append(indent_str + line)
+            # Non-empty line: add indentation, preserve line ending
+            # Strip the line ending, add indent, then re-add line ending
+            line_content = line.rstrip("\r\n")
+            line_ending = line[len(line_content) :]  # Extract original line ending
+            result_lines.append(indent_str + line_content + line_ending)
         else:
-            # Empty line in the middle: keep it empty
-            result_lines.append("")
+            # Empty line in the middle: keep it as-is
+            result_lines.append(line)
 
-    return "\n".join(result_lines)
+    # Concatenate (lines already have their endings)
+    return "".join(result_lines)
 
 
-def check_format(original_code: str, formatted_code: str) -> bool:
+def check_format(
+    original_code: str, formatted_code: str, filename: str = "<string>"
+) -> Tuple[bool, str]:
     """
     Check that formatting doesn't change the semantics of dedent strings.
 
@@ -67,17 +77,19 @@ def check_format(original_code: str, formatted_code: str) -> bool:
     Args:
         original_code: The original source code
         formatted_code: The formatted source code
+        filename: Optional filename for error messages
 
     Returns:
-        True if the formatting is semantically equivalent, False otherwise
+        Tuple of (success: bool, error_message: str)
+        If success is True, error_message is empty.
+        If success is False, error_message contains details about the mismatch.
     """
     # Parse both versions
     try:
         original_tree = ast.parse(original_code)
         formatted_tree = ast.parse(formatted_code)
-    except SyntaxError:
-        # If either fails to parse, we can't verify
-        return False
+    except SyntaxError as e:
+        return False, f"Syntax error during validation: {e}"
 
     # Find dedent strings in both
     original_strings = find_dedent_strings(original_tree)
@@ -85,17 +97,51 @@ def check_format(original_code: str, formatted_code: str) -> bool:
 
     # Should have the same number of dedent calls
     if len(original_strings) != len(formatted_strings):
-        return False
+        return False, (
+            f"Number of dedent() calls changed: "
+            f"original={len(original_strings)}, formatted={len(formatted_strings)}"
+        )
 
     # Compare each pair of dedent strings
-    for orig_node, fmt_node in zip(original_strings, formatted_strings):
+    for i, (orig_node, fmt_node) in enumerate(zip(original_strings, formatted_strings)):
+        assert isinstance(orig_node.value, str)
+        assert isinstance(fmt_node.value, str)
         orig_dedented = textwrap.dedent(orig_node.value)
         fmt_dedented = textwrap.dedent(fmt_node.value)
 
         if orig_dedented != fmt_dedented:
-            return False
+            # Create detailed error message
+            error_lines = [
+                f"\nValidation failed for dedent() call #{i+1} at {filename}:{orig_node.lineno}:{orig_node.col_offset}",
+                "\n--- Original string (repr) ---",
+                repr(orig_node.value),
+                "\n--- After dedent(original) ---",
+                repr(orig_dedented),
+                "\n--- Formatted string (repr) ---",
+                repr(fmt_node.value),
+                "\n--- After dedent(formatted) ---",
+                repr(fmt_dedented),
+                "\n--- Difference ---",
+            ]
 
-    return True
+            # Show character-by-character difference for the first mismatch
+            min_len = min(len(orig_dedented), len(fmt_dedented))
+            for j in range(min_len):
+                if orig_dedented[j] != fmt_dedented[j]:
+                    error_lines.append(
+                        f"First difference at position {j}: "
+                        f"original={repr(orig_dedented[j])} vs formatted={repr(fmt_dedented[j])}"
+                    )
+                    break
+
+            if len(orig_dedented) != len(fmt_dedented):
+                error_lines.append(
+                    f"Length difference: original={len(orig_dedented)}, formatted={len(fmt_dedented)}"
+                )
+
+            return False, "\n".join(error_lines)
+
+    return True, ""
 
 
 def format_dedent_strings(source: str, filename: str = "<string>") -> str:
@@ -144,6 +190,8 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         col_offset = node.col_offset
         end_lineno = node.end_lineno
         end_col_offset = node.end_col_offset
+        assert end_lineno is not None
+        assert end_col_offset is not None
         opening_quote_col = node.col_offset
         # Convert to 0-based indexing
         start_line = lineno - 1
@@ -188,10 +236,24 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
         formatted_content = format_string_content(original_content, content_indent)
 
         # Escape the formatted content for the target quote style
-        # We need to escape backslashes and the quote character being used
-        escaped_content = formatted_content.replace(
-            "\\", "\\\\"
-        )  # Escape backslashes first
+        # We need to escape backslashes first, then special characters, then quotes
+        escaped_content = formatted_content
+
+        # Escape backslashes first (must be first!)
+        escaped_content = escaped_content.replace("\\", "\\\\")
+
+        # Escape special characters that need to be preserved as escape sequences
+        # We need to preserve \r, \f, \v, \a, \b as escape sequences
+        escaped_content = escaped_content.replace("\r", "\\r")
+        escaped_content = escaped_content.replace("\f", "\\f")
+        escaped_content = escaped_content.replace("\v", "\\v")
+        escaped_content = escaped_content.replace("\a", "\\a")
+        escaped_content = escaped_content.replace("\b", "\\b")
+        # Note: \t and \n are handled separately - \t for tabs, \n for newlines
+        # We DON'T escape \n because newlines are actual line breaks in the string literal
+        # We DON'T escape \t because tabs should be preserved as-is
+
+        # Escape quote sequences specific to the quote style being used
         if quote == '"""':
             # In triple double quotes, escape any """ sequences
             escaped_content = escaped_content.replace('"""', r"\"\"\"")
@@ -227,9 +289,8 @@ def format_dedent_strings(source: str, filename: str = "<string>") -> str:
     formatted_source = "".join(source_chars)
 
     # Verify that formatting preserves semantics
-    if not check_format(source, formatted_source):
-        raise RuntimeError(
-            f"Formatting validation failed for {filename}: dedented strings don't match"
-        )
+    success, error_msg = check_format(source, formatted_source, filename)
+    if not success:
+        raise RuntimeError(f"Formatting validation failed for {filename}:\n{error_msg}")
 
     return formatted_source
