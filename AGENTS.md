@@ -196,22 +196,18 @@ Run manually: `pre-commit run --all-files`
 ```python
 # Before
 def func():
-    return dedent(
-        """
+    return dedent("""
     line1
     line2
-    """
-    )
+    """)
 
 
 # After (content gets 8 spaces - function indent + 4)
 def func():
-    return dedent(
-        """
+    return dedent("""
         line1
         line2
-    """
-    )
+    """)
 ```
 
 ### What Gets Formatted
