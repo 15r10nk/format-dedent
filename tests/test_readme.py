@@ -2,6 +2,7 @@
 
 import ast
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
@@ -152,7 +153,11 @@ def test_readme_code_examples_are_correct():
 
     # Use external_file with .txt format to handle markdown
     # inline-snapshot will automatically update the file when run with --inline-snapshot=fix
-    assert correct_readme == external_file("../README.md", format=".txt")
+    if sys.platform == "win32":
+        # pathlib normalizes CRLF while external_file preserves checkout endings.
+        assert correct_readme == current_readme
+    else:
+        assert correct_readme == external_file("../README.md", format=".txt")
 
 
 def test_readme_code_blocks_are_syntactically_valid():
