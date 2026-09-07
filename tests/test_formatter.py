@@ -27,33 +27,26 @@ class TestModuleLevelDedent:
 
     def test_simple_module_level(self):
         """Module level dedent should indent content by 4 spaces."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             MESSAGE = dedent("""
             Hello World
             This is a test
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 MESSAGE = dedent("""
                     Hello World
                     This is a test
                 """)
-                '''
-            )
-        )
+                '''))
 
     def test_module_level_with_relative_indent(self):
         """Module level dedent should preserve relative indentation."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             SQL = textwrap.dedent("""
@@ -62,11 +55,8 @@ class TestModuleLevelDedent:
             WHERE active = true
                 AND age > 18
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 SQL = textwrap.dedent("""
@@ -75,9 +65,7 @@ class TestModuleLevelDedent:
                     WHERE active = true
                         AND age > 18
                 """)
-                '''
-            )
-        )
+                '''))
 
 
 class TestFunctionLevelDedent:
@@ -85,8 +73,7 @@ class TestFunctionLevelDedent:
 
     def test_simple_function_dedent(self):
         """Function level dedent should indent content by 8 spaces."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             def get_message():
@@ -95,11 +82,8 @@ class TestFunctionLevelDedent:
                 Multiple lines
                 """)
                 return text
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 def get_message():
@@ -108,14 +92,11 @@ class TestFunctionLevelDedent:
                         Multiple lines
                     """)
                     return text
-                '''
-            )
-        )
+                '''))
 
     def test_function_with_complex_content(self):
         """Function dedent with complex multi-line content."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             def generate_html():
@@ -127,11 +108,8 @@ class TestFunctionLevelDedent:
                     </body>
                 </html>
                 """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 def generate_html():
@@ -143,9 +121,7 @@ class TestFunctionLevelDedent:
                             </body>
                         </html>
                     """)
-                '''
-            )
-        )
+                '''))
 
 
 class TestClassLevelDedent:
@@ -153,8 +129,7 @@ class TestClassLevelDedent:
 
     def test_class_attribute_dedent(self):
         """Class attribute dedent should indent by 8 spaces."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             class Example:
@@ -162,11 +137,8 @@ class TestClassLevelDedent:
                 Class level string
                 Multiple lines
                 """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 class Example:
@@ -174,14 +146,11 @@ class TestClassLevelDedent:
                         Class level string
                         Multiple lines
                     """)
-                '''
-            )
-        )
+                '''))
 
     def test_method_dedent(self):
         """Method dedent should indent by 12 spaces."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             class Database:
@@ -193,11 +162,8 @@ class TestClassLevelDedent:
                     ORDER BY created_at DESC
                     """)
                     return query
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 class Database:
@@ -209,9 +175,7 @@ class TestClassLevelDedent:
                             ORDER BY created_at DESC
                         """)
                         return query
-                '''
-            )
-        )
+                '''))
 
 
 class TestNestedBlockDedent:
@@ -219,8 +183,7 @@ class TestNestedBlockDedent:
 
     def test_if_block_dedent(self):
         """Dedent inside if block should have correct indentation."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             def process():
@@ -230,11 +193,8 @@ class TestNestedBlockDedent:
                     Second line
                     """)
                     return msg
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 def process():
@@ -244,14 +204,11 @@ class TestNestedBlockDedent:
                             Second line
                         """)
                         return msg
-                '''
-            )
-        )
+                '''))
 
     def test_deeply_nested_dedent(self):
         """Dedent in deeply nested structure."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             def outer():
@@ -262,11 +219,8 @@ class TestNestedBlockDedent:
                         Multiple lines here
                         """)
                         print(text)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 def outer():
@@ -277,14 +231,11 @@ class TestNestedBlockDedent:
                                 Multiple lines here
                             """)
                             print(text)
-                '''
-            )
-        )
+                '''))
 
     def test_try_except_dedent(self):
         """Dedent inside try/except blocks."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             def handle_error():
@@ -296,11 +247,8 @@ class TestNestedBlockDedent:
                     Please try again
                     """)
                     return error_msg
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 def handle_error():
@@ -312,9 +260,7 @@ class TestNestedBlockDedent:
                             Please try again
                         """)
                         return error_msg
-                '''
-            )
-        )
+                '''))
 
 
 class TestQuoteStylePreservation:
@@ -322,48 +268,36 @@ class TestQuoteStylePreservation:
 
     def test_triple_double_quotes(self):
         """Triple double quotes should be preserved."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             text = dedent("""
             Content here
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 text = dedent("""
                     Content here
                 """)
-                '''
-            )
-        )
+                '''))
 
     def test_triple_single_quotes(self):
         """Triple single quotes should be preserved."""
-        source = dedent(
-            """            from textwrap import dedent
+        source = dedent("""            from textwrap import dedent
 
             text = dedent('''
             Content here
             ''')
-            """
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                """\
+            """)
+        assert format_source(source) == snapshot(dedent("""\
                 from textwrap import dedent
 
                 text = dedent('''
                     Content here
                 ''')
-                """
-            )
-        )
+                """))
 
 
 class TestNonDedentStringsIgnored:
@@ -371,29 +305,22 @@ class TestNonDedentStringsIgnored:
 
     def test_regular_string_unchanged(self):
         """Regular strings should not be modified."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             regular = """
                 Original indentation
                 With trailing spaces
             """
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 regular = """
                     Original indentation
                     With trailing spaces
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_mixed_dedent_and_regular(self):
         """Only dedent strings should be formatted."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             formatted = dedent("""
@@ -403,11 +330,8 @@ class TestNonDedentStringsIgnored:
             unformatted = """
                 This stays the same
             """
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 formatted = dedent("""
@@ -417,9 +341,7 @@ class TestNonDedentStringsIgnored:
                 unformatted = """
                     This stays the same
                 """
-                '''
-            )
-        )
+                '''))
 
 
 class TestTrailingWhitespacePreserved:
@@ -427,28 +349,22 @@ class TestTrailingWhitespacePreserved:
 
     def test_preserves_trailing_spaces(self):
         """Trailing spaces and tabs should be preserved."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             text = dedent("""
             Line with spaces
             Another line with tabs
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 text = dedent("""
                     Line with spaces
                     Another line with tabs
                 """)
-                '''
-            )
-        )
+                '''))
 
 
 class TestEmptyLinesPreserved:
@@ -456,8 +372,7 @@ class TestEmptyLinesPreserved:
 
     def test_preserves_empty_lines(self):
         """Empty lines in the middle should be kept."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             text = dedent("""
@@ -467,11 +382,8 @@ class TestEmptyLinesPreserved:
 
             Third paragraph
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 text = dedent("""
@@ -481,9 +393,7 @@ class TestEmptyLinesPreserved:
 
                     Third paragraph
                 """)
-                '''
-            )
-        )
+                '''))
 
 
 class TestRealWorldExamples:
@@ -491,8 +401,7 @@ class TestRealWorldExamples:
 
     def test_sql_query_formatting(self):
         """SQL query in a method."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             class UserRepository:
@@ -510,11 +419,8 @@ class TestRealWorldExamples:
                     ORDER BY post_count DESC
                     LIMIT 100
                     """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 class UserRepository:
@@ -532,14 +438,11 @@ class TestRealWorldExamples:
                             ORDER BY post_count DESC
                             LIMIT 100
                         """)
-                '''
-            )
-        )
+                '''))
 
     def test_html_template_formatting(self):
         """HTML template formatting."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             def render_email(name):
@@ -556,11 +459,8 @@ class TestRealWorldExamples:
                 </html>
                 """)
                 return html.format(name=name)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 def render_email(name):
@@ -577,14 +477,11 @@ class TestRealWorldExamples:
                         </html>
                     """)
                     return html.format(name=name)
-                '''
-            )
-        )
+                '''))
 
     def test_json_template_formatting(self):
         """JSON template with proper indentation."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             CONFIG = textwrap.dedent("""
@@ -599,11 +496,8 @@ class TestRealWorldExamples:
                 }
             }
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 CONFIG = textwrap.dedent("""
@@ -618,14 +512,11 @@ class TestRealWorldExamples:
                         }
                     }
                 """)
-                '''
-            )
-        )
+                '''))
 
     def test_dedent_in_list(self):
         """JSON template with proper indentation."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             l = [
@@ -642,11 +533,8 @@ class TestRealWorldExamples:
                 2,
                 3,
             ]
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 l = [
@@ -663,9 +551,7 @@ class TestRealWorldExamples:
                     2,
                     3,
                 ]
-                '''
-            )
-        )
+                '''))
 
 
 class TestBackslashContinuation:
@@ -673,8 +559,7 @@ class TestBackslashContinuation:
 
     def test_backslash_after_opening_quotes(self):
         """Test dedent with backslash continuation (no leading newline)."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             message = dedent("""\\
@@ -682,11 +567,8 @@ class TestBackslashContinuation:
             line2
             line3
             """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 from textwrap import dedent
 
                 message = dedent("""\\
@@ -694,14 +576,11 @@ class TestBackslashContinuation:
                     line2
                     line3
                 """)
-                '''
-            )
-        )
+                '''))
 
     def test_backslash_in_function(self):
         """Test backslash continuation in function context."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             def get_text():
@@ -710,11 +589,8 @@ class TestBackslashContinuation:
                 Second line
                     Indented line
                 """)
-            '''
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                '''\
+            ''')
+        assert format_source(source) == snapshot(dedent('''\
                 import textwrap
 
                 def get_text():
@@ -723,34 +599,26 @@ class TestBackslashContinuation:
                         Second line
                             Indented line
                     """)
-                '''
-            )
-        )
+                '''))
 
     def test_backslash_with_triple_single_quotes(self):
         """Test backslash continuation with single quotes."""
-        source = dedent(
-            """\
+        source = dedent("""\
             from textwrap import dedent
 
             text = dedent('''\\
             No leading newline
             Second line
             ''')
-            """
-        )
-        assert format_source(source) == snapshot(
-            dedent(
-                """\
+            """)
+        assert format_source(source) == snapshot(dedent("""\
                 from textwrap import dedent
 
                 text = dedent('''\\
                     No leading newline
                     Second line
                 ''')
-                """
-            )
-        )
+                """))
 
 
 class TestAddDedent:
@@ -758,8 +626,7 @@ class TestAddDedent:
 
     def test_wraps_simple_multiline_string(self):
         """Simple multiline string should be wrapped with dedent()."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             x = """
             hello
             world
@@ -770,12 +637,9 @@ class TestAddDedent:
             world
             """)
 
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
                 x = """
                 hello
@@ -787,36 +651,27 @@ class TestAddDedent:
                 world
                 """))
 
-                '''
-            )
-        )
+                '''))
 
     def test_preserves_indented_string(self):
         """String with indentation should not be wrapped (dedent would change it)."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             x = """
                 indented
                 content
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 x = """
                     indented
                     content
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_skips_existing_dedent(self):
         """Strings already in dedent() should not be double-wrapped."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             x = dedent("""
@@ -826,12 +681,9 @@ class TestAddDedent:
             y = """
             not wrapped
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
 
                 x = dedent("""
@@ -841,87 +693,66 @@ class TestAddDedent:
                 y = """
                 not wrapped
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_adds_import_after_docstring(self):
         """Import should be added after module docstring."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             """Module docstring."""
 
             x = """
             content
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 """Module docstring."""
 
                 x = """
                 content
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_skips_single_line_strings(self):
         """Single-line strings should not be wrapped."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             x = "single line"
             y = """single line"""
             z = """
             multiline
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 x = "single line"
                 y = """single line"""
                 z = """
                 multiline
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_skips_strings_containing_newline_chars(self):
         """Strings containing \\n but on single line should not be wrapped."""
-        source = dedent(
-            """\
+        source = dedent("""\
             x = "\\n"
             y = '\\n'
             z = "hello\\nworld"
             func("\\n")
-            """
-        )
+            """)
         result = add_dedent(source)
         # None of these should be wrapped since they're single-line literals
-        assert result == snapshot(
-            dedent(
-                """\
+        assert result == snapshot(dedent("""\
                 x = "\\n"
                 y = '\\n'
                 z = "hello\\nworld"
                 func("\\n")
-                """
-            )
-        )
+                """))
 
     def test_preserves_escape_sequences_in_content(self):
         """Multiline strings containing escape sequences should preserve them."""
         # This tests the case where a dedent string contains code with escape sequences
         # like \\n that should not be converted to actual newlines
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             def test():
@@ -931,12 +762,9 @@ class TestAddDedent:
             """
             )
                 return x
-            '''
-        )
+            ''')
         result = format_dedent_strings(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
 
                 def test():
@@ -946,14 +774,11 @@ class TestAddDedent:
                     """
                 )
                     return x
-                '''
-            )
-        )
+                '''))
 
     def test_multiple_strings_in_function(self):
         """Multiple multiline strings in a function."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             def func():
                 sql = """
             SELECT *
@@ -969,12 +794,9 @@ class TestAddDedent:
                 keep this
                 as is
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
                 def func():
                     sql = dedent("""
@@ -991,35 +813,27 @@ class TestAddDedent:
                     keep this
                     as is
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_with_existing_textwrap_import(self):
         """Use textwrap.dedent when the textwrap module is imported."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             import textwrap
 
             def get_message():
                 return """
             content
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 import textwrap
 
                 def get_message():
                     return textwrap.dedent("""
                 content
                 """)
-                '''
-            )
-        )
+                '''))
 
         namespace = {}
         exec(result, namespace)
@@ -1027,29 +841,23 @@ class TestAddDedent:
 
     def test_with_aliased_dedent_import(self):
         """Use the imported alias when dedent has been renamed."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent as d
 
             def get_message():
                 return """
             content
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent as d
 
                 def get_message():
                     return d("""
                 content
                 """)
-                '''
-            )
-        )
+                '''))
 
         namespace = {}
         exec(result, namespace)
@@ -1057,32 +865,25 @@ class TestAddDedent:
 
     def test_with_existing_dedent_import(self):
         """Should not add duplicate import if dedent already imported."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             x = """
             content
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
 
                 x = """
                 content
                 """
-                '''
-            )
-        )
+                '''))
 
     def test_complex_example(self):
         """Complex real-world example with mixed content."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             """Database utilities."""
 
             def get_query():
@@ -1100,12 +901,9 @@ class TestAddDedent:
             SIMPLE = """
             no indent
             """
-            '''
-        )
+            ''')
         result = add_dedent(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 """Database utilities."""
                 from textwrap import dedent
 
@@ -1124,9 +922,7 @@ class TestAddDedent:
                 SIMPLE = """
                 no indent
                 """
-                '''
-            )
-        )
+                '''))
 
 
 class TestSpecialCharacters:
@@ -1134,8 +930,7 @@ class TestSpecialCharacters:
 
     def test_carriage_return_preservation(self):
         """Carriage return (\\r) should be preserved in formatted strings."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             text = dedent("""
@@ -1143,12 +938,9 @@ class TestSpecialCharacters:
             Line 2\\r\\n
             Line 3
             """)
-            '''
-        )
+            ''')
         result = format_source(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
 
                 text = dedent("""
@@ -1157,9 +949,7 @@ class TestSpecialCharacters:
 
                     Line 3
                 """)
-                '''
-            )
-        )
+                '''))
 
         # Verify semantic equivalence
         import ast
@@ -1179,8 +969,7 @@ class TestSpecialCharacters:
 
     def test_form_feed_and_special_chars(self):
         """Form feed (\\f), vertical tab (\\v), bell (\\a) should be preserved."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             special = dedent("""
@@ -1188,12 +977,9 @@ class TestSpecialCharacters:
             Vertical tab: \\v
             Bell: \\a
             """)
-            '''
-        )
+            ''')
         result = format_source(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
 
                 special = dedent("""
@@ -1201,14 +987,11 @@ class TestSpecialCharacters:
                     Vertical tab: \\v
                     Bell: \\a
                 """)
-                '''
-            )
-        )
+                '''))
 
     def test_mixed_line_endings(self):
         """Mixed line endings (\\r, \\n, \\r\\n) should be preserved."""
-        source = dedent(
-            '''\
+        source = dedent('''\
             from textwrap import dedent
 
             def func():
@@ -1219,12 +1002,9 @@ class TestSpecialCharacters:
                 Mixed: line 4
                 """)
                 return text
-            '''
-        )
+            ''')
         result = format_source(source)
-        assert result == snapshot(
-            dedent(
-                '''\
+        assert result == snapshot(dedent('''\
                 from textwrap import dedent
 
                 def func():
@@ -1236,9 +1016,7 @@ class TestSpecialCharacters:
                         Mixed: line 4
                     """)
                     return text
-                '''
-            )
-        )
+                '''))
 
 
 if __name__ == "__main__":
